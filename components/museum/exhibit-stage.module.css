@@ -1,0 +1,139 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* --- the state selector ------------------------------------- */
+
+.selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.option {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  min-height: 38px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition:
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.option:hover {
+  color: var(--ink);
+}
+
+.optionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+  flex: 0 0 auto;
+}
+
+.broken {
+  color: var(--broken);
+  border-color: var(--broken-edge);
+}
+.first {
+  color: var(--first);
+  border-color: var(--first-edge);
+}
+.fixed {
+  color: var(--fixed);
+  border-color: var(--fixed-edge);
+}
+
+.optionOn {
+  background: rgba(236, 229, 216, 0.07);
+}
+
+.optionOn .optionDot {
+  opacity: 1;
+}
+
+.broken.optionOn {
+  background: var(--broken-dim);
+  border-color: var(--broken);
+}
+.first.optionOn {
+  background: var(--first-dim);
+  border-color: var(--first);
+}
+.fixed.optionOn {
+  background: var(--fixed-dim);
+  border-color: var(--fixed);
+}
+
+/* --- the wall label under the case --------------------------- */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border-left: 2px solid var(--rule-strong);
+  padding-left: var(--s-4);
+}
+
+.cardBroken {
+  border-left-color: var(--broken);
+}
+.cardFirst {
+  border-left-color: var(--first);
+}
+.cardFixed {
+  border-left-color: var(--fixed);
+}
+
+.headline {
+  font-family: var(--font-serif);
+  font-size: var(--t-6);
+  line-height: 1.25;
+  color: var(--ink);
+  max-width: 46ch;
+}
+
+.tryList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: var(--t-3);
+  max-width: var(--measure);
+}
+
+.tryList li {
+  display: flex;
+  gap: var(--s-3);
+}
+
+.tryList li::before {
+  content: "→";
+  color: var(--ink-3);
+  flex: 0 0 auto;
+}
+
+.caseProject {
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
