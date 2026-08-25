@@ -17,6 +17,12 @@
 
 .section {
   padding-top: var(--s-7);
+}
+
+/* Running text keeps the reading measure; the two panels and the numbered
+   rules are allowed to be wider than a paragraph. */
+.section > .prose,
+.rules {
   max-width: var(--measure);
 }
 
@@ -24,7 +30,7 @@
   display: grid;
   gap: var(--s-4);
   grid-template-columns: 1fr;
-  max-width: none;
+  max-width: 940px;
 }
 
 @media (min-width: 780px) {
