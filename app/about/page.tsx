@@ -14,6 +14,10 @@ export const metadata: Metadata = {
 /* Spelled out, because "six cases from 4 settings" reads like a typo. */
 const NUMBERS = ["no", "one", "two", "three", "four", "five", "six"] as const;
 const spell = (n: number) => NUMBERS[n] ?? String(n);
+const Spell = (n: number) => {
+  const word = spell(n);
+  return word.charAt(0).toUpperCase() + word.slice(1);
+};
 
 const REAL = [
   "The debugging cases. Each one is a defect I actually ran into, fixed, and had to explain — including the fixes that were correct and turned out not to be the end of it.",
@@ -140,7 +144,7 @@ export default function AboutPage() {
         <div className="section-head">
           <p className="label">Evidence standard</p>
           <h2 id="standard-heading">
-            {spell(RULES.length)} rules I held myself to
+            {Spell(RULES.length)} rules I held myself to
           </h2>
         </div>
         <ol className={s.rules}>

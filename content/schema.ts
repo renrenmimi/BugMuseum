@@ -229,7 +229,7 @@ function isNonEmptyString(v: unknown): v is string {
 /** A bare commit hash. Seven to forty hex characters, on its own. */
 const BARE_SHA = /\b(?=[0-9a-f]*\d)[0-9a-f]{7,40}\b/g;
 
-/** "PR #12", "pull request #12", "pull/12". */
+/** Pull-request references, in the three shapes people write them. */
 const PR_REFERENCE = /\b(?:PR|pull request)\s*#\s*\d+|\/pull\/\d+/gi;
 
 /**
@@ -253,12 +253,19 @@ const ALLOWED_NAMES: readonly string[] = [
   "IntersectionObserver",
   "ResizeObserver",
   "StrictMode",
+  // library and language types that appear in the reproductions
+  "ReturnType",
+  "FormEvent",
+  "ReactNode",
   // identifiers that appear in the reproductions
   "CircuitBreaker",
   "BreakerOpenError",
   "AuthContext",
   "UserProfile",
   "HttpsError",
+  // this project's own exports, quoted in the test excerpts
+  "SimEndpoint",
+  "SimBreaker",
 ];
 
 export interface PrivacyIssue {

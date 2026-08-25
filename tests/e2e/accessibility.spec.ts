@@ -153,7 +153,11 @@ test.describe("keyboard", () => {
 
     await page.getByRole("button", { name: "Push the background" }).focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByText(/scrollTop moved/)).toBeVisible();
+    await expect(
+      page
+        .getByRole("list", { name: "Drawer simulation event log" })
+        .getByText(/scrollTop moved/),
+    ).toBeVisible();
 
     // Escape works from anywhere while the drawer is open.
     await page.keyboard.press("Escape");
@@ -236,7 +240,9 @@ test.describe("metadata", () => {
     const meta = async (selector: string) =>
       page.locator(selector).first().getAttribute("content");
 
-    expect(await meta('meta[name="description"]')).toContain("real bugs");
+    expect(await meta('meta[name="description"]')).toContain(
+      "anonymised debugging cases",
+    );
     expect(await meta('meta[property="og:title"]')).toContain("Bug Museum");
     expect(await meta('meta[property="og:image"]')).toContain(
       "/opengraph-image",

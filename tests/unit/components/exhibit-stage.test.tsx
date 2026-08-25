@@ -95,9 +95,16 @@ describe("the state selector", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(2);
   });
 
-  it("always names the simulation note under the case", () => {
+  it("always shows the simulation note under the case", () => {
     render(<ExhibitStage exhibit={breaker} syncHash={false} />);
-    expect(screen.getByText(/faithful re-implementation/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/the same class the tests drive/i),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the case with the technical setting, not a project", () => {
+    render(<ExhibitStage exhibit={breaker} syncHash={false} />);
+    expect(screen.getByText(breaker.context.label)).toBeInTheDocument();
   });
 });
 
