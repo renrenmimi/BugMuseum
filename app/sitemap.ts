@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { exhibits } from "@/content/exhibits";
 
-const BASE = "https://bug-museum.vercel.app";
+const BASE = "https://bugmuseum.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

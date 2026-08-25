@@ -5,7 +5,7 @@ import "../styles/base.css";
 import "../styles/layout.css";
 import { SiteNav } from "@/components/museum/site-nav";
 
-const SITE_URL = "https://bug-museum.vercel.app";
+const SITE_URL = "https://bugmuseum.vercel.app";
 const DESCRIPTION =
   "An interactive museum of real bugs from my own projects — the broken behaviour, the fix that was not quite enough, the root cause, and the test that keeps it from coming back.";
 
