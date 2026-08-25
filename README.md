@@ -4,7 +4,7 @@ An interactive museum of six real bugs from four of my own projects. Each
 exhibit lets you reproduce the broken behaviour, switch to the fix, read why it
 happened, and see the test that keeps it from coming back.
 
-Live: <https://bug-museum.vercel.app>
+Live: <https://bugmuseum.vercel.app>
 
 ## Why it exists
 
@@ -195,6 +195,15 @@ to `screenshots/` for visual review. Those are for looking at, not asserting on.
 Vercel, with the defaults: `next build`, no environment variables, no secrets,
 no runtime configuration. Every route is prerendered, including the Open Graph
 image, so there is nothing to configure.
+
+The canonical origin is declared in three places — `app/layout.tsx`,
+`app/sitemap.ts` and `app/robots.ts` — and it has to be a **project production
+domain**, not a deployment alias. Vercel's default Standard Protection exempts
+production domains and gates everything else behind a Vercel login, so pointing
+`metadataBase` at a mere alias makes `og:image`, `rel="canonical"` and every URL
+in `sitemap.xml` resolve to a login redirect while the site itself stays public.
+Check it with `curl -s -o /dev/null -w "%{http_code}" <origin>` after any domain
+change: 200 is right, 302 means the origin is not a production domain.
 
 ## Accessibility
 
