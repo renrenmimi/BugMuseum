@@ -113,7 +113,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
     return () => vp.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* --- the lock itself, transcribed from app-shell.tsx ------------- */
+  /* --- the lock itself: the three code paths this exhibit is about -- */
   useLayoutEffect(() => {
     if (!open || mode === "broken") return;
     const vp = viewportRef.current;
@@ -175,7 +175,8 @@ export function DrawerSim({ state }: { state: StateKey }) {
     };
   }, [open, mode, push, tone]);
 
-  /* --- sample five frames after a close, exactly like lock2.mjs ---- */
+  /* --- five frames after a close: waiting for the scroll to settle
+     is exactly what hides the difference between the last two states -- */
   const sampleFrames = useCallback(() => {
     const vp = viewportRef.current;
     if (!vp) return;

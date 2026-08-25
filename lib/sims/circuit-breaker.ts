@@ -1,10 +1,10 @@
 /* ============================================================
-   Both versions of ToneDown's CircuitBreaker, side by side, on a
-   clock you pass in. The only difference between them is whether
-   asking a question changes the answer.
+   Both versions of the breaker, side by side, on a clock you pass
+   in. The only difference between them is whether asking a
+   question changes the answer.
 
-   Transcribed from src/shared/circuitBreaker.ts before and after
-   commit ff02395.
+   This is the object the exhibit drives and the object the unit
+   tests drive — there is no third implementation anywhere.
    ============================================================ */
 
 export type CircuitState = "closed" | "open" | "half-open";
@@ -115,8 +115,9 @@ export class SimBreaker {
 export type EndpointOutcome = "sent-ok" | "sent-failed" | "refused";
 
 /**
- * The four call sites in ToneDown pre-flight before deciding whether it is
- * worth assembling a request. This is that shape, reduced to two methods.
+ * Callers pre-flight before deciding whether it is even worth assembling a
+ * request, and only some of them go on to issue one. This is that shape,
+ * reduced to two methods.
  */
 export class SimEndpoint {
   readonly breaker: SimBreaker;

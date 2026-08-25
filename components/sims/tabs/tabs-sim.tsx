@@ -35,7 +35,7 @@ function TabPane({
   active: boolean;
 }) {
   const caches =
-    Number(tab.caches.profile) + Number(tab.caches.pets) + Number(tab.caches.users);
+    Number(tab.caches.profile) + Number(tab.caches.content) + Number(tab.caches.users);
   return (
     <div className={cx(s.pane, active && s.paneActive)}>
       <p className={s.paneHead}>

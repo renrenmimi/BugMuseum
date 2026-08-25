@@ -1,10 +1,11 @@
 /* ============================================================
-   A hard-coded America/Los_Angeles for 2026, so the exhibit reads
-   the same in every visitor's time zone.
+   A hard-coded America/Los_Angeles for 2026, so the exhibit and
+   its tests read the same in every visitor's time zone and on any
+   CI runner — including one running in UTC, which has no
+   transitions and would make these assertions trivially green.
 
-   DST runs from 02:00 on 8 March (a 23-hour day) to 02:00 on
-   1 November (a 25-hour day). Both are Sundays; both are the days
-   ToneDown's streak test pins.
+   Daylight time runs from 02:00 on 8 March (a 23-hour day) to
+   02:00 on 1 November (a 25-hour day). Both are Sundays.
    ============================================================ */
 
 export const ZONE_LABEL = "America/Los_Angeles";
@@ -60,7 +61,7 @@ export function fromLocal(p: LocalParts): number {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** ToneDown's localDateKey: local calendar fields, never UTC. */
+/** A date key read from local calendar fields, never from UTC. */
 export function localDateKey(utcMs: number): string {
   const p = toLocal(utcMs);
   return `${p.year}-${pad(p.month + 1)}-${pad(p.day)}`;
@@ -102,8 +103,9 @@ export interface WalkResult {
 }
 
 /**
- * ToneDown's computeStreak, in both versions. The loop shape — including
- * "an uncleared today does not break yesterday's streak" — is theirs.
+ * The streak walk, in both versions. The loop shape — including "an uncleared
+ * today does not break yesterday's streak" — is part of what is being
+ * reproduced, so it is kept rather than simplified.
  */
 export function walkStreak(
   version: WalkVersion,
@@ -148,7 +150,7 @@ export function walkStreak(
 
 export type DrillVersion = "utc" | "local";
 
-/** todaysDrill's index, before and after ff02395. */
+/** Which drill is "today's", counted two different ways. */
 export function drillIndex(version: DrillVersion, utcMs: number): number {
   if (version === "utc") return Math.floor(utcMs / DAY_MS);
   const p = toLocal(utcMs);

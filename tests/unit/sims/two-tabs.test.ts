@@ -31,7 +31,7 @@ describe("the scripted deletion race", () => {
     const end = last(TAB_SCRIPTS["first-fix"]);
     const held =
       Number(end?.tabB.caches.profile) +
-      Number(end?.tabB.caches.pets) +
+      Number(end?.tabB.caches.content) +
       Number(end?.tabB.caches.users);
     expect(end?.tabB.signedIn).toBe(false);
     expect(held).toBeGreaterThan(0);
@@ -43,7 +43,7 @@ describe("the scripted deletion race", () => {
     expect(end?.tabB.repairCalls).toBe(0);
     expect(end?.tabB.caches).toEqual({
       profile: false,
-      pets: false,
+      content: false,
       users: false,
     });
     expect(end?.server.userDoc).toBe("deleted");

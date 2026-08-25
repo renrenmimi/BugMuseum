@@ -1,10 +1,11 @@
 /* ============================================================
-   AgentLab's build chapter, reduced to the part that broke: a
-   correct answer schedules an advance, and the form stays live
-   for the length of the celebration.
+   A guided exercise, reduced to the part that broke: a correct
+   answer schedules an advance, and the form stays live for the
+   length of the celebration.
 
-   The clock is injected so the museum's tests can drive it without
-   waiting 700ms per assertion.
+   The clock is injected so the tests can assert on how many
+   advances are queued, rather than waiting 700ms and inspecting
+   where the counter stopped.
    ============================================================ */
 
 export type SubmitVersion = "broken" | "fixed";

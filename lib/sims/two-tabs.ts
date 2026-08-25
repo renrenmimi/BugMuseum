@@ -2,10 +2,10 @@
    Two tabs, one account, and a listener that thinks a deleted
    profile is a damaged one.
 
-   This is a scripted model of the sequence described in PetNote
-   PR #144 — not a Firebase client. The frames are hand-written so
-   a visitor can stop between any two events; the invariants at the
-   end of each script are asserted in tests/unit.
+   This is a scripted model of a sequence, not a database client.
+   The frames are hand-written so a visitor can stop between any
+   two events; the invariants at the end of each script are
+   asserted in tests/unit/sims/two-tabs.test.ts.
    ============================================================ */
 
 export type TabsVersion = "broken" | "first-fix" | "fixed";
@@ -21,7 +21,7 @@ export interface TabState {
   profile: string | null;
   signedIn: boolean;
   /** In-memory caches the app keeps beside the profile. */
-  caches: { profile: boolean; pets: boolean; users: boolean };
+  caches: { profile: boolean; content: boolean; users: boolean };
   repairCalls: number;
 }
 
@@ -35,17 +35,17 @@ export interface Frame {
   tabB: TabState;
 }
 
-const LIVE_TAB = (name: string | null = "mochi"): TabState => ({
+const LIVE_TAB = (name: string | null = "casey"): TabState => ({
   profile: name,
   signedIn: true,
-  caches: { profile: true, pets: true, users: true },
+  caches: { profile: true, content: true, users: true },
   repairCalls: 0,
 });
 
 const OUT: TabState = {
   profile: null,
   signedIn: false,
-  caches: { profile: false, pets: false, users: false },
+  caches: { profile: false, content: false, users: false },
   repairCalls: 0,
 };
 
@@ -90,14 +90,14 @@ function build(drafts: Draft[]): Frame[] {
 const OPENING: Draft[] = [
   {
     actor: "Tab B",
-    event: "onSnapshot(users/{uid}) attached",
+    event: "listener attached to users/{uid}",
     detail:
       "The feed tab has been open for an hour, listening to the same user document as everything else.",
   },
   {
     actor: "Tab A",
     event: "Delete my account",
-    detail: "The settings tab calls the deleteUserAccount callable.",
+    detail: "The settings tab calls the account-deletion endpoint.",
   },
 ];
 
@@ -115,7 +115,7 @@ const BROKEN = build([
     actor: "Tab B",
     event: "snapshot: displayName is empty",
     detail:
-      "needsProfileRepair is true. The listener calls ensureUserProfile to put the missing fields back.",
+      "The repair check passes, so the listener calls the create endpoint to put the missing fields back.",
     tone: "broken",
     tabB: { repairCalls: 1 },
   },
@@ -137,7 +137,7 @@ const BROKEN = build([
     actor: "Server",
     event: "ensureUserProfile recreates the account",
     detail:
-      "The callable does exactly what it was asked to: the user document and the username reservation are back.",
+      "The endpoint does exactly what it was asked to: the user document and the username reservation are back.",
     tone: "broken",
     server: { userDoc: "recreated", usernameReservation: true },
     tabB: { profile: "mochi" },
@@ -158,7 +158,7 @@ const FIRST_FIX = build([
     actor: "Server",
     event: "tombstone written first",
     detail:
-      "userDeletionTombstones/{uid} is written before anything is removed, so the profile callables can refuse.",
+      "The tombstone record is written before anything is removed, so the profile endpoints can refuse.",
     tone: "first",
     server: { tombstone: true },
   },
@@ -197,7 +197,7 @@ const FIRST_FIX = build([
     actor: "Tab B",
     event: "…still holding three caches",
     detail:
-      "Signing out through this branch skipped the cache clearing the normal signOut() does. The pet list and user cache belong to an account that no longer exists.",
+      "Signing out through this branch skipped the cache clearing the normal path does. The content list and user cache belong to an account that no longer exists.",
     tone: "first",
   },
 ]);
@@ -208,7 +208,7 @@ const FIXED = build([
     actor: "Server",
     event: "tombstone written first",
     detail:
-      "ensureUserProfile and updateUserProfile both refuse while userDeletionTombstones/{uid} exists.",
+      "The create and update endpoints both refuse while the tombstone exists.",
     tone: "fixed",
     server: { tombstone: true },
   },
@@ -237,12 +237,12 @@ const FIXED = build([
     actor: "Tab B",
     event: "sign out, and drop everything",
     detail:
-      "clearUserProfileCache, clearPetCache and clearCachedUsers run on the way out, mirroring the normal sign-out path.",
+      "All three cache-clearing calls run on the way out, mirroring the normal sign-out path.",
     tone: "fixed",
     tabB: {
       signedIn: false,
       profile: null,
-      caches: { profile: false, pets: false, users: false },
+      caches: { profile: false, content: false, users: false },
     },
   },
   {

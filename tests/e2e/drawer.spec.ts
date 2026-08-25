@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /* ============================================================
-   Exhibit 01, in the museum's own words: the port of DrillLab's
-   lock2.mjs. The assertion that matters is a frame sample — if you
-   wait for the scroll to settle, the broken version arrives too
-   and the test passes for the wrong reason.
+   Exhibit 01. The assertion that matters is a frame sample: if you
+   wait for the scroll to settle, the broken version arrives too and
+   the test passes for the wrong reason.
    ============================================================ */
 
 const URL = "/exhibits/drawer-scroll-lock";
