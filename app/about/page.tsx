@@ -47,6 +47,10 @@ const RULES = [
   },
 ];
 
+/* Spelled out, because "six defects from 4 projects" reads like a typo. */
+const NUMBERS = ["no", "one", "two", "three", "four", "five", "six"] as const;
+const spell = (n: number) => NUMBERS[n] ?? String(n);
+
 export default function AboutPage() {
   const projects = [...new Set(exhibits.map((e) => e.project.repo))];
 
@@ -57,9 +61,9 @@ export default function AboutPage() {
         <h1 className={s.title}>These are my bugs.</h1>
         <p className={s.lede}>
           I kept running into the same shape of problem: the fix is easy to show
-          and the reasoning is not. So I collected six defects from{" "}
-          {projects.length} of my own projects, rebuilt each one as something you
-          can operate, and left the working out attached.
+          and the reasoning is not. So I collected {spell(exhibits.length)}{" "}
+          defects from {spell(projects.length)} of my own projects, rebuilt each
+          one as something you can operate, and left the working out attached.
         </p>
       </header>
 
@@ -123,8 +127,8 @@ export default function AboutPage() {
                 {i < projects.length - 1 ? ", " : ". "}
               </span>
             ))}
-            All four are public, so every claim on this site can be checked
-            against the history it came from.
+            All {spell(projects.length)} are public, so every claim on this site
+            can be checked against the history it came from.
           </p>
           <p>
             The museum itself is{" "}
@@ -134,8 +138,8 @@ export default function AboutPage() {
             >
               open source
             </a>
-            . Exhibits are plain data files, which is the only reason six of them
-            was practical.
+            . Exhibits are plain data files, which is the only reason{" "}
+            {spell(exhibits.length)} of them was practical.
           </p>
           <p>
             No analytics, no cookies, no tracking of any kind. Start at the{" "}
