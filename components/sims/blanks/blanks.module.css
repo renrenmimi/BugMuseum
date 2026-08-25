@@ -1,0 +1,117 @@
+.codeCard {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: #100e0b;
+  padding: var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  line-height: 1.75;
+  overflow-x: auto;
+  color: var(--ink-2);
+}
+
+.blank {
+  display: inline-block;
+  min-width: 74px;
+  text-align: center;
+  border-bottom: 1.5px solid var(--ink-3);
+  color: var(--ink-3);
+  padding: 0 4px;
+}
+
+.blankActive {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+.blankDone {
+  border-bottom-color: var(--fixed-edge);
+  color: var(--fixed);
+}
+
+.blankSkipped {
+  border-bottom-color: var(--broken);
+  color: var(--broken);
+}
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.input {
+  flex: 1 1 168px;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 8px 11px;
+  min-height: 38px;
+  font-family: var(--font-mono);
+  font-size: var(--t-3);
+}
+
+.input::placeholder {
+  color: var(--ink-3);
+}
+
+.feedback {
+  border-left: 2px solid var(--rule-strong);
+  padding-left: var(--s-3);
+  font-size: var(--t-3);
+  color: var(--ink-2);
+  min-height: 46px;
+  line-height: 1.55;
+}
+
+.right {
+  border-left-color: var(--fixed);
+  color: var(--fixed);
+}
+.wrong {
+  border-left-color: var(--broken);
+  color: var(--broken);
+}
+.hint {
+  border-left-color: var(--first);
+  color: var(--first);
+}
+
+.queue {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.slot {
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.06em;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: var(--ink-3);
+}
+
+.slotFull {
+  border-style: solid;
+  border-color: var(--first-edge);
+  color: var(--first);
+  background: var(--first-dim);
+}
+
+.slotExtra {
+  border-color: var(--broken-edge);
+  color: var(--broken);
+  background: var(--broken-dim);
+}
+
+.prompt {
+  font-family: var(--font-serif);
+  font-size: var(--t-5);
+  color: var(--ink);
+  line-height: 1.4;
+}

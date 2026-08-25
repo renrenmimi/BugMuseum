@@ -1,0 +1,72 @@
+.strip {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 54px;
+  padding: var(--s-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.24);
+  overflow-x: auto;
+}
+
+.tick {
+  flex: 0 0 12px;
+  border-radius: 2px;
+  background: rgba(236, 229, 216, 0.1);
+  height: 10px;
+}
+
+.tickRunning {
+  background: var(--fixed);
+  height: 34px;
+}
+
+.tickStopped {
+  background: var(--broken);
+  height: 20px;
+}
+
+.tickIdle {
+  background: rgba(236, 229, 216, 0.12);
+  height: 8px;
+}
+
+.transcript {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.24);
+  padding: var(--s-3);
+  min-height: 74px;
+  font-family: var(--font-serif);
+  font-size: var(--t-5);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.transcriptEmpty {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+}
+
+.deps {
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s-2) var(--s-3);
+  background: rgba(0, 0, 0, 0.24);
+  overflow-wrap: anywhere;
+}
+
+.depsBroken {
+  border-color: var(--broken-edge);
+  color: var(--broken);
+}
+
+.depsFixed {
+  border-color: var(--fixed-edge);
+  color: var(--fixed);
+}

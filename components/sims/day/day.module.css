@@ -1,0 +1,149 @@
+.grid {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 860px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--accent);
+  min-height: 32px;
+}
+
+.steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+}
+
+.step {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: 5px 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.stepCounted {
+  border-color: var(--fixed-edge);
+  color: var(--fixed);
+}
+
+.stepMiss {
+  border-color: var(--rule-strong);
+  color: var(--ink-3);
+}
+
+.stepIndex {
+  color: var(--ink-3);
+  flex: 0 0 auto;
+}
+
+.stepKey {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stepTime {
+  color: var(--ink-3);
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.records {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rec {
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.04em;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.recSkipped {
+  border-color: var(--broken-edge);
+  color: var(--broken);
+  text-decoration: line-through;
+}
+
+.recDst {
+  border-color: var(--first-edge);
+  color: var(--first);
+}
+
+.hours {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.hour {
+  height: 34px;
+  border-radius: 2px;
+  background: rgba(236, 229, 216, 0.09);
+  position: relative;
+}
+
+.hourA {
+  background: rgba(203, 184, 150, 0.42);
+}
+
+.hourB {
+  background: rgba(226, 105, 90, 0.5);
+}
+
+.hourNow {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.hourScale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  align-items: center;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}

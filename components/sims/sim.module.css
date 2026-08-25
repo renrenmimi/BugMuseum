@@ -1,0 +1,208 @@
+/* ============================================================
+   Shared furniture for every simulation: control rows, readouts,
+   event logs. Each object in the museum is different; the
+   handles on the case are the same.
+   ============================================================ */
+
+.sim {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.btn {
+  appearance: none;
+  background: rgba(236, 229, 216, 0.05);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  min-height: 38px;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(236, 229, 216, 0.1);
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--wall);
+  font-weight: 600;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #dcc9a6;
+  border-color: #dcc9a6;
+}
+
+/* --- readouts ------------------------------------------------ */
+
+.readouts {
+  display: grid;
+  gap: var(--s-2);
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+}
+
+.readout {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s-2) var(--s-3);
+  background: rgba(0, 0, 0, 0.2);
+  min-width: 0;
+}
+
+.readoutKey {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.readoutVal {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--t-4);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.valBroken {
+  color: var(--broken);
+}
+.valFirst {
+  color: var(--first);
+}
+.valFixed {
+  color: var(--fixed);
+}
+
+/* --- event log ------------------------------------------------ */
+
+.log {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: #100e0b;
+  max-height: 188px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.logList {
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  line-height: 1.6;
+}
+
+.logRow {
+  display: flex;
+  gap: var(--s-3);
+  padding: 3px var(--s-3);
+  border-bottom: 1px solid rgba(236, 229, 216, 0.05);
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.logRow:last-child {
+  border-bottom: 0;
+}
+
+.logTime {
+  color: var(--ink-3);
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.logText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.logBroken {
+  color: var(--broken);
+}
+.logFirst {
+  color: var(--first);
+}
+.logFixed {
+  color: var(--fixed);
+}
+
+.logEmpty {
+  padding: var(--s-3);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+}
+
+/* --- misc ----------------------------------------------------- */
+
+.hint {
+  font-size: var(--t-2);
+  color: var(--ink-3);
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.panels {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 800px) {
+  .panelsTwo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .panelsThree {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.panel {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+  padding: var(--s-3);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.panelHead {
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+  align-items: baseline;
+}
