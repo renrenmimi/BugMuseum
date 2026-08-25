@@ -7,6 +7,8 @@
   font-size: var(--t-2);
   line-height: 1.75;
   overflow-x: auto;
+  /* The template is indented code; a <div> would eat the leading spaces. */
+  white-space: pre;
   color: var(--ink-2);
 }
 

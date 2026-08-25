@@ -11,7 +11,8 @@
 }
 
 .tick {
-  flex: 0 0 12px;
+  flex: 1 1 0;
+  min-width: 8px;
   border-radius: 2px;
   background: rgba(236, 229, 216, 0.1);
   height: 10px;

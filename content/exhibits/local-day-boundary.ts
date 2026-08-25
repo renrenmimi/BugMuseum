@@ -233,5 +233,5 @@ export const localDayBoundary: Exhibit = {
   evidence:
     "Two ToneDown commits on main, 17 minutes apart: 82d995c fixes the walk, ff02395 fixes the rotation.",
   simulationNote:
-    "The clock below uses a small hard-coded model of America/Los_Angeles for 2026 (UTC-8, UTC-7 between 8 March and 1 November) so it behaves the same in every visitor's time zone. The three walk implementations are ToneDown's, transcribed.",
+    "The clock here uses a small hard-coded model of America/Los_Angeles for 2026 (UTC-8, UTC-7 between 8 March and 1 November) so it behaves the same in every visitor's time zone. The three walk implementations are ToneDown's, transcribed.",
 };

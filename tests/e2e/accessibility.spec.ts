@@ -15,9 +15,32 @@ const horizontalOverflow = (page: Page) =>
   page.evaluate(() => {
     const doc = document.documentElement;
     const offenders: string[] = [];
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+
+    /* A code block is allowed to be wider than the phone — it lives in its own
+       scroll container and clips. What is not allowed is the page itself
+       moving sideways, so anything inside a horizontal scroller is exempt. */
+    const all = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+    const scrollers = new Set<HTMLElement>();
+    for (const el of all) {
+      const overflow = getComputedStyle(el).overflowX;
+      if (overflow === "auto" || overflow === "scroll" || overflow === "hidden") {
+        scrollers.add(el);
+      }
+    }
+
+    const insideScroller = (el: HTMLElement) => {
+      let node = el.parentElement;
+      while (node && node !== document.body) {
+        if (scrollers.has(node)) return true;
+        node = node.parentElement;
+      }
+      return false;
+    };
+
+    for (const el of all) {
       const box = el.getBoundingClientRect();
       if (box.width === 0) continue;
+      if (insideScroller(el)) continue;
       if (box.right > doc.clientWidth + 1) {
         offenders.push(
           `${el.tagName.toLowerCase()}.${el.className.toString().slice(0, 40)} → ${Math.round(box.right)}`,
