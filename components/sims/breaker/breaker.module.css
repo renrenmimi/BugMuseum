@@ -1,0 +1,78 @@
+.machine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: stretch;
+}
+
+.node {
+  flex: 1 1 128px;
+  min-width: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s-3);
+  background: rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.nodeName {
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.nodeWhat {
+  font-size: var(--t-2);
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+.nodeOn {
+  border-color: var(--accent);
+  background: rgba(203, 184, 150, 0.09);
+}
+
+.nodeOn .nodeName {
+  color: var(--ink);
+}
+
+.nodeStuck {
+  border-color: var(--broken-edge);
+  background: var(--broken-dim);
+}
+
+.nodeStuck .nodeName {
+  color: var(--broken);
+}
+
+.nodeHealthy {
+  border-color: var(--fixed-edge);
+  background: var(--fixed-dim);
+}
+
+.nodeHealthy .nodeName {
+  color: var(--fixed);
+}
+
+.verdict {
+  border-left: 2px solid var(--rule-strong);
+  padding-left: var(--s-3);
+  font-size: var(--t-3);
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.verdictBroken {
+  border-left-color: var(--broken);
+  color: var(--broken);
+}
+
+.verdictFixed {
+  border-left-color: var(--fixed);
+  color: var(--fixed);
+}

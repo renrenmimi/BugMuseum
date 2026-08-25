@@ -1,0 +1,138 @@
+.grid {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 820px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.pane {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.22);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.paneHead {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+  align-items: baseline;
+}
+
+.paneActive {
+  border-color: var(--accent);
+}
+
+.paneActive .paneHead {
+  color: var(--ink);
+}
+
+.rows {
+  list-style: none;
+  padding: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.rowKey {
+  color: var(--ink-3);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rowVal {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.on {
+  color: var(--fixed);
+}
+.off {
+  color: var(--ink-3);
+}
+.alarm {
+  color: var(--broken);
+}
+.warn {
+  color: var(--first);
+}
+
+.now {
+  border-left: 2px solid var(--rule-strong);
+  padding-left: var(--s-3);
+  min-height: 74px;
+}
+
+.nowActor {
+  font-family: var(--font-mono);
+  font-size: var(--t-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.nowEvent {
+  font-family: var(--font-serif);
+  font-size: var(--t-5);
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.nowDetail {
+  font-size: var(--t-3);
+  color: var(--ink-2);
+  margin-top: var(--s-2);
+  max-width: 64ch;
+}
+
+.nowBroken {
+  border-left-color: var(--broken);
+}
+.nowFirst {
+  border-left-color: var(--first);
+}
+.nowFixed {
+  border-left-color: var(--fixed);
+}
+
+.progress {
+  display: flex;
+  gap: 3px;
+}
+
+.pip {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(236, 229, 216, 0.12);
+}
+
+.pipDone {
+  background: var(--accent);
+}

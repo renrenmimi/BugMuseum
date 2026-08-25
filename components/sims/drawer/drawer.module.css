@@ -1,0 +1,293 @@
+/* ============================================================
+   A phone, in a display case. The scroll container inside it
+   carries `scroll-behavior: smooth`, which is the whole point.
+   ============================================================ */
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+  align-items: flex-start;
+}
+
+.deviceCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  align-items: center;
+  flex: 0 0 auto;
+  width: min(300px, 100%);
+  margin-inline: auto;
+}
+
+.sideCol {
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.phone {
+  position: relative;
+  width: 100%;
+  height: 470px;
+  border-radius: 22px;
+  border: 1px solid var(--rule-strong);
+  background: #0e0d0b;
+  padding: 9px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    var(--shadow);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #17150f;
+  isolation: isolate;
+}
+
+/* The scrolling "document". */
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  /* The rule this whole exhibit is about. */
+  scroll-behavior: smooth;
+}
+
+/* The stand-in for <body>. Locking sets an explicit height and hides its
+   overflow, so the absolutely positioned .doc inside it stops contributing
+   to the scroll container's scrollable area — which is what makes the
+   document's own scroll offset 0 while the lock is on, exactly as
+   position: fixed does to a real page. */
+.docWrap {
+  position: relative;
+  min-height: 100%;
+}
+
+.doc {
+  min-height: 100%;
+}
+
+/* Above the scrim and the drawer, like DrillLab's top bar: the hamburger
+   has to stay reachable while the drawer is open. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(23, 21, 15, 0.94);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.burger {
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 5px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.burger span {
+  display: block;
+  width: 13px;
+  height: 1.5px;
+  background: currentColor;
+  grid-column: 1;
+}
+
+.burger:hover {
+  border-color: var(--accent);
+}
+
+.topTitle {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docBody {
+  padding: 12px 12px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.block {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 10px;
+  background: rgba(236, 229, 216, 0.03);
+}
+
+.blockNum {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+.blockTitle {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(236, 229, 216, 0.1);
+  margin-top: 7px;
+}
+
+.barShort {
+  width: 62%;
+}
+
+/* --- drawer + scrim ------------------------------------------ */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(6, 5, 4, 0.62);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  animation: fade var(--dur) var(--ease);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.drawer {
+  position: absolute;
+  z-index: 6;
+  top: 46px;
+  bottom: 0;
+  left: 0;
+  width: 76%;
+  background: #1d1a14;
+  border-right: 1px solid var(--rule-strong);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: slide var(--dur) var(--ease);
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer,
+  .scrim {
+    animation: none;
+  }
+}
+
+.drawerHead {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 4px 6px 8px;
+}
+
+.navItem {
+  appearance: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  padding: 9px 8px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: rgba(236, 229, 216, 0.07);
+  color: var(--ink);
+}
+
+.navItem[aria-current="true"] {
+  color: var(--ink);
+  background: rgba(203, 184, 150, 0.12);
+}
+
+.drawerClose {
+  margin-top: auto;
+}
+
+/* --- frame strip ---------------------------------------------- */
+
+.frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--t-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.frame {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 2px 7px;
+  color: var(--ink-2);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.frameOff {
+  border-color: var(--broken-edge);
+  color: var(--broken);
+}
+
+.frameOn {
+  border-color: var(--fixed-edge);
+  color: var(--fixed);
+}
+
+.frameArrow {
+  color: var(--ink-3);
+}
