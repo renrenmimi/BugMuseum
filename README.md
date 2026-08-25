@@ -149,7 +149,7 @@ npm run dev          # http://localhost:3000
 ```bash
 npm run typecheck    # tsc --noEmit
 npm run lint         # next lint
-npm test             # Vitest: 99 tests
+npm test             # Vitest: 137 tests
 npm run build        # static export of every route
 
 npm run e2e:install  # once, downloads Chromium
@@ -209,8 +209,11 @@ image, so there is nothing to configure.
 - `prefers-reduced-motion` switches decorative transitions off. The one place
   motion is the content — the drawer's slow restore — becomes a stepped
   restore rather than disappearing.
-- Body text is warm off-white on warm off-black; no colour is the only carrier
-  of meaning, and the three state colours are always paired with a label.
+- Body text is warm off-white on warm off-black. Every ink/surface pair in
+  `styles/tokens.css` is measured against WCAG AA by `tests/unit/contrast.test.ts`
+  — that check is what caught `--ink-3` at 4.40:1 against the display case.
+- No colour is the only carrier of meaning; the three state colours are always
+  paired with a label.
 - Nothing is hidden behind hover.
 
 ## Evidence and source policy
