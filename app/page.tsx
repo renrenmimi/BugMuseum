@@ -80,7 +80,7 @@ export default function HomePage() {
             <p className={s.featuredSummary}>{featured.summary}</p>
             <div className={s.meta}>
               <span className={`${s.metaTag} ${s.metaPlain}`}>
-                {featured.project.name}
+                {featured.context.label}
               </span>
               {featured.categories.map((c) => (
                 <span key={c} className={s.metaTag}>

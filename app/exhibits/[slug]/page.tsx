@@ -69,13 +69,9 @@ export default async function ExhibitPage({
         <p className={s.summary}>{exhibit.summary}</p>
 
         <div className={s.meta}>
-          <a
-            className={`${s.metaTag} ${s.metaProject} ${s.metaPlain}`}
-            href={exhibit.project.href}
-            rel="noreferrer"
-          >
-            {exhibit.project.repo} ↗
-          </a>
+          <span className={`${s.metaTag} ${s.metaContext} ${s.metaPlain}`}>
+            {exhibit.context.label}
+          </span>
           {exhibit.categories.map((c) => (
             <span key={c} className={s.metaTag}>
               {CATEGORY_LABELS[c]}
@@ -88,9 +84,11 @@ export default async function ExhibitPage({
           ))}
         </div>
 
+        <p className={s.context}>{exhibit.context.description}</p>
+
         <p className={s.evidence}>
-          <strong>Evidence.</strong> <RichText text={exhibit.evidence} />{" "}
-          {exhibit.project.blurb}
+          <strong>What you can check here.</strong>{" "}
+          <RichText text={exhibit.evidence} />
         </p>
       </header>
 

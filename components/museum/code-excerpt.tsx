@@ -25,7 +25,9 @@ export function CodeExcerptBlock({ excerpt }: { excerpt: CodeExcerpt }) {
       <figcaption className={s.codeHead}>
         <span className={s.codeCaption}>{excerpt.caption}</span>
         <span className={s.codeSource}>
-          {excerpt.verbatim ? "quoted" : "written for this museum"}
+          {excerpt.origin === "museum-source"
+            ? "from this repository"
+            : "minimal reproduction"}
           {excerpt.href ? (
             <>
               {" · "}
