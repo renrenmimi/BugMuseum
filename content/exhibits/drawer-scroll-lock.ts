@@ -262,5 +262,5 @@ export const drawerScrollLock: Exhibit = {
   evidence:
     "DrillLab PR #16, squashed to e5d430d, with the two fixes as separate commits on the branch.",
   simulationNote:
-    "The phone below is a scroll container in this page, not DrillLab. It runs the same three implementations against a `scroll-behavior: smooth` element, so the difference you see between First fix and Fixed is the real mechanism — but the content, the 1.5-second duration and the pixel numbers are this browser's, not the ones measured in the report.",
+    "The phone in the case is a scroll container in this page, not DrillLab. It runs the same three implementations against a `scroll-behavior: smooth` element, so the difference you see between First fix and Fixed is the real mechanism — but the content, the 1.5-second duration and the pixel numbers are this browser's, not the ones measured in the report.",
 };

@@ -9,6 +9,13 @@ import { Readout } from "../readout";
 import sim from "../sim.module.css";
 import s from "./tabs.module.css";
 
+const ACCOUNT_LABEL: Record<ServerState["userDoc"], string> = {
+  live: "live",
+  pending: "being deleted",
+  deleted: "gone",
+  recreated: "resurrected",
+};
+
 const DOC_LABEL: Record<ServerState["userDoc"], string> = {
   live: "live",
   pending: "deletionPending",
@@ -178,13 +185,7 @@ export function TabsSim({ state }: { state: StateKey }) {
       <div className={sim.readouts}>
         <Readout
           name="account"
-          value={
-            frame.server.userDoc === "recreated"
-              ? "resurrected"
-              : frame.server.userDoc === "deleted"
-                ? "gone"
-                : "being deleted"
-          }
+          value={ACCOUNT_LABEL[frame.server.userDoc]}
           tone={frame.server.userDoc === "recreated" ? "broken" : "neutral"}
         />
         <Readout

@@ -204,5 +204,5 @@ export const circuitBreakerHalfOpen: Exhibit = {
   evidence:
     "ToneDown commit ff02395 on main, which adds beginAttempt() and recovery.test.ts in the same change.",
   simulationNote:
-    "The breaker below is a faithful re-implementation of both versions of ToneDown's `CircuitBreaker`, driven by a virtual clock you advance by pressing a button. No network is involved; “fail a request” just records a failure.",
+    "The breaker in the case is a faithful re-implementation of both versions of ToneDown's `CircuitBreaker`, driven by a virtual clock you advance by pressing a button. No network is involved; “fail a request” just records a failure.",
 };

@@ -89,8 +89,8 @@ export function RecogniserSim({ state }: { state: StateKey }) {
         data-testid="deps"
       >
         {version === "fixed"
-          ? "}, [language])   // and a ref holding the applied language"
-          : "}, [isRecognizing, language])   // the state this effect produces"}
+          ? "useEffect(() => { … }, [language])  // + a ref for the applied one"
+          : "useEffect(() => { … }, [isRecognizing, language])  // it sets this"}
       </p>
 
       <div className={sim.controls}>

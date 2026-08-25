@@ -214,5 +214,5 @@ export const doubleSubmitSkippedBlank: Exhibit = {
   evidence:
     "AgentLab commit cbe3058 on main. No upstream tests — the behaviour is pinned by this museum's simulation instead.",
   simulationNote:
-    "The exercise below is a three-blank copy of AgentLab's build chapter running both submit handlers, with the advance delay shortened from 1,400ms to 700ms so the demonstration is not tedious. The timer queue is drawn as it fills.",
+    "The exercise in the case is a three-blank copy of AgentLab's build chapter running both submit handlers, with the advance delay shortened from 1,400ms to 700ms so the demonstration is not tedious. The timer queue is drawn as it fills.",
 };
