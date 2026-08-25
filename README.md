@@ -1,8 +1,12 @@
 # Bug Museum
 
-An interactive museum of six real bugs from four of my own projects. Each
-exhibit lets you reproduce the broken behaviour, switch to the fix, read why it
-happened, and see the test that keeps it from coming back.
+An interactive museum of six anonymised debugging cases. Each exhibit lets you
+reproduce the broken behaviour, switch to the fix, read why it happened, and run
+the test that keeps it from coming back.
+
+Based on bugs encountered during real project work. Identifying project details
+have been changed, and each behaviour is reproduced here as a deterministic
+simulation.
 
 Live: <https://bugmuseum.vercel.app>
 
@@ -13,48 +17,62 @@ the part that matters when you are deciding whether someone can debug.
 
 So this is not a debugging tutorial and it contains no invented incidents. It
 is a collection of things that actually went wrong in code I wrote, presented
-with the working out left in — including the fixes that shipped, were correct,
-and turned out not to be the end of it.
+with the working out left in — including the fixes that were correct and turned
+out not to be the end of it. Three of the six have a middle state for exactly
+that reason.
 
-Three of the six exhibits have a middle state for exactly that reason.
+The projects those defects came from are not named. The technical setting is
+what a reader needs; the product name explains nothing, some of the software is
+still in use, and a museum of its past defects is not a fair way to represent
+it. Each exhibit is labelled by its setting instead.
 
-## What is real and what is simulated
+## What is real, what is modelled, what is tested
 
 **Real**
 
-- The bugs, the fixes, and the order they happened in. Every exhibit links to
-  at least one commit or pull request in a public repository.
-- Code excerpts marked *quoted* are copied from the linked source, with long
-  lines wrapped and unrelated bodies elided.
-- The measurements — 88 pixels of background scroll, a restore that crawled
-  back to 2054.5 over 1.5 seconds, `0 → 0 → 1 → 4 → 9` frame samples, 48 of 64
-  assertions failing — come from the commit messages that recorded them.
+- The debugging cases: the defect, the root cause, the order the fixes happened
+  in, and why the first one was not enough.
+- The tests. Every regression test an exhibit links to is a test in this
+  repository, and every excerpt marked *from this repository* is copied from the
+  file it links to.
 
-**Simulated**
+**Modelled**
 
-- Every demonstration. Nothing here talks to Firebase, a microphone or an LLM.
-  Each simulation re-implements the mechanism so you can drive it yourself.
-- The content inside the simulations: lesson titles, drill names, the three
-  fill-in-the-blanks. Written for the museum, not scraped from the originals.
+- Every demonstration. Nothing here talks to a server, a microphone or a model
+  API. Each simulation re-implements the mechanism so you can drive it.
+- Every code excerpt marked *minimal reproduction*: written for this museum to
+  show the pattern, not quoted from anyone's source.
+- The content inside the simulations — page titles, drill names, the three
+  fill-in-the-blanks.
 - The clocks. Time zones, backoffs and 180ms ticks are modelled
-  deterministically so the exhibit behaves the same for every visitor.
-- Two regression tests. Exhibits 04 and 06 have no upstream test suite; the
-  museum's own tests stand in, and the exhibit page says so where the test
-  would otherwise be.
+  deterministically so the exhibits behave identically for every visitor and on
+  every test runner.
 
-Every display case carries a note explaining what it reproduces rather than
-runs. `/about` states the evidence standard in full.
+**Where the evidence is thinner**
+
+Exhibit 04 is modelled rather than driven in a real browser: the API it depends
+on does not exist in a Node test environment, so its loop is reproduced as a
+deterministic state machine. Its exhibit page says so in the section where the
+test would otherwise be, rather than implying end-to-end coverage it does not
+have.
+
+Every display case also carries a note explaining what it reproduces rather than
+runs, including where a delay was shortened to keep the demonstration bearable.
+`/about` states the evidence standard in full.
 
 ## The collection
 
-| № | Exhibit | Project | States | Evidence |
-|---|---------|---------|--------|----------|
-| 01 | The drawer that let the page slide out from under it | DrillLab | Broken · First fix · Fixed | [PR #16](https://github.com/renrenmimi/DrillLab/pull/16), squashed to `e5d430d` |
-| 02 | The circuit breaker that could never close again | ToneDown | Broken · Fixed | [`ff02395`](https://github.com/renrenmimi/ToneDown/commit/ff02395627af644b5cb54f8affb49f3b8557233b) |
-| 03 | The day that was only 23 hours long | ToneDown | Broken · First fix · Fixed | [`82d995c`](https://github.com/renrenmimi/ToneDown/commit/82d995c0b5d50be135d660a71974c05215fdf49e) and [`ff02395`](https://github.com/renrenmimi/ToneDown/commit/ff02395627af644b5cb54f8affb49f3b8557233b) |
-| 04 | The effect that stopped what it had just started | ToneDown | Broken · Fixed | [`1bf7f32`](https://github.com/renrenmimi/ToneDown/commit/1bf7f32) |
-| 05 | The other tab brought the account back | PetNote | Broken · First fix · Fixed | [PR #144](https://github.com/renrenmimi/PetNote/pull/144), squashed to `dfa599f` |
-| 06 | Two presses of Enter, one question you never saw | AgentLab | Broken · Fixed | [`cbe3058`](https://github.com/renrenmimi/AgentLab/commit/cbe3058d6445440d7ebbe5f072028ddc5eea5596) |
+| № | Exhibit | Setting | States |
+|---|---------|---------|--------|
+| 01 | The drawer that let the page slide out from under it | Learning interface | Broken · First fix · Fixed |
+| 02 | The circuit breaker that could never close again | API resilience layer | Broken · Fixed |
+| 03 | The day that was only 23 hours long | Daily practice tracker | Broken · First fix · Fixed |
+| 04 | The effect that stopped what it had just started | Voice session | Broken · Fixed |
+| 05 | The other tab brought the account back | Multi-tab account flow | Broken · First fix · Fixed |
+| 06 | Two presses of Enter, one question you never saw | Guided coding exercise | Broken · Fixed |
+
+The settings are descriptions, not products. None of them is the name of an
+application.
 
 ## Architecture
 
@@ -88,7 +106,7 @@ interface Exhibit {
   number: number;               // gallery number, 1-based
   title: string;
   summary: string;              // exactly one sentence
-  project: Project;             // name, repo, href, one-line blurb
+  context: ExhibitContext;      // { label, description } — see below
   categories: Category[];       // state | async | browser | concurrency | testing
   tech: string[];
   simulation: SimulationId;     // key into components/sims/registry.tsx
@@ -97,27 +115,56 @@ interface Exhibit {
   rootCause: string[];
   whyFirstFixFailed?: string[]; // required exactly when a first-fix state exists
   test: RegressionTest;         // prose + one excerpt
-  excerpts: CodeExcerpt[];      // diff or code, each marked verbatim or not
-  timeline: TimelineEntry[];    // discovered → attempted → fixed → regression-test
-  sources: SourceLink[];
-  evidence: string;             // one line naming the artefact that proves it
+  excerpts: CodeExcerpt[];      // each marked "reproduction" or "museum-source"
+  timeline: TimelineEntry[];    // observed → first fix → final fix → test
+  sources: SourceLink[];        // artifacts in this repository only
+  evidence: string;             // one line: what you can check here
   simulationNote: string;       // what is reproduced rather than run
 }
 ```
 
-`validateExhibit()` and `validateGallery()` enforce the rules that keep the
-collection honest, and `tests/unit/exhibits.test.ts` runs them:
+`ExhibitContext` carries no project identity. Its `label` must be one of six
+fixed technical descriptions, and `description` is one sentence about the kind of
+software the case happened in. There is no field holding a project name, and no
+hidden one either.
 
-- every source link points at `github.com/renrenmimi`, over https;
-- at least one source is a commit or a pull request;
-- a `verbatim` excerpt must link to where it was copied from;
+`SourceLink.kind` names an artifact in this repository — `exhibit-definition`,
+`simulation`, `simulation-logic`, `regression-test`, `commit` — and every
+exhibit must supply at least its definition, its simulation and its test.
+
+`CodeExcerpt.origin` is the honest half of the model:
+
+- `"reproduction"` — a minimal rewrite of the pattern, written here. Rendered as
+  *minimal reproduction*, with no source link, because there is nothing to link.
+- `"museum-source"` — copied from a file in this repository, which it must link
+  to. Rendered as *from this repository*.
+
+### Validation
+
+`validateExhibit()` and `validateGallery()` enforce completeness, and
+`findPrivacyIssues()` enforces provenance. Both run in
+[`tests/unit/exhibits.test.ts`](tests/unit/exhibits.test.ts) and
+[`tests/unit/privacy.test.ts`](tests/unit/privacy.test.ts):
+
+- every link is either site-relative or under this repository — a link to a
+  different repository under the same owner is rejected, not tolerated;
+- a `museum-source` excerpt must link to the file it was copied from;
+- `context.label` must be one of the six approved labels, and no two exhibits
+  may share one;
+- sources must include the exhibit definition, the simulation and the test;
 - a diff must contain both an added and a removed line;
-- a `first-fix` state requires both `whyFirstFixFailed` and an
-  `attempted` timeline entry — and vice versa;
+- a `first-fix` state requires both `whyFirstFixFailed` and an `attempted`
+  timeline entry — and vice versa;
 - the timeline runs in order and ends with a regression test;
 - no code line is wider than 84 characters, because that is where the case
   starts scrolling sideways on a 360px phone;
 - exactly one featured exhibit; unique slugs and numbers.
+
+The privacy rules are written as patterns rather than as a list of names to keep
+out, because a deny-list would put those names back into a tracked file. They
+reject bare commit hashes, pull-request references, links to other repositories
+under the same owner, and words shaped like product names — technology names are
+allowed explicitly, so an unfamiliar one fails the check instead of shipping.
 
 Prose fields support `` `inline code` `` and `**emphasis**`; titles and
 summaries do not, because they are rendered as plain text into `<title>` and
@@ -135,7 +182,8 @@ summaries do not, because they are rendered as plain text into `<title>` and
 4. Add the exhibit to the array in `content/exhibits/index.ts`.
 
 No page, route or layout work is involved. `npm test` will fail loudly if the
-new exhibit breaks any of the rules above.
+new exhibit breaks any of the rules above — including the provenance ones, so an
+outbound link or a stray commit hash stops the build rather than shipping.
 
 ## Local development
 
@@ -183,7 +231,10 @@ What the tests actually assert, rather than screenshot:
 - **The simulations' logic**, in `lib/sims/`, in both directions: the broken
   breaker is asserted to be permanently stranded, the millisecond streak walk is
   asserted to skip 8 March, the double submit is asserted to queue two timers.
-- **Exhibit data**, against the validator.
+- **Exhibit data**, against the completeness validator.
+- **Provenance**, against the privacy rules: no outbound repository links, no
+  commit hashes, no pull-request references, no product-shaped names — checked
+  over exhibit data, over the rendered pages, and over this README.
 - **Keyboard**: skip link, roving tabindex on the state selector, arrow-key
   navigation, visible focus rings, the whole drawer demo driven without a mouse.
 - **Direct URLs**: every exhibit route, `#broken` / `#first-fix` / `#fixed`
@@ -234,15 +285,20 @@ change: 200 is right, 302 means the origin is not a production domain.
 
 ## Evidence and source policy
 
-1. **A commit, or it did not happen.** Every exhibit links to at least one
-   commit or pull request. Candidates I could not point at were dropped.
-2. **No composite bugs.** One exhibit, one defect, one fix history. Nothing here
+1. **Evidence you can open, or none claimed.** Every exhibit links to its own
+   definition, its simulation and the test that pins it, all in this repository.
+   There are no citations to anywhere else, so there is nothing you have to take
+   on trust.
+2. **No composite cases.** One exhibit, one defect, one fix history. Nothing here
    is two half-remembered incidents merged into a better story.
-3. **Say when the test is weak.** Two of the six were verified by hand rather
-   than by a test, and their exhibit pages say so where the test would be.
+3. **Say when the evidence is thinner.** Exhibit 04 is modelled rather than
+   driven in a browser, and its page says so where the test would be.
 4. **Say when the simulation diverges.** Every display case carries a note.
-5. **The first fix stays in the record.** Where a fix shipped and turned out to
-   be incomplete, it is on the wall next to the final one.
+5. **The first fix stays in the record.** Where a fix was correct and turned out
+   to be incomplete, it is on the wall next to the final one.
+6. **No project identities.** Exhibits describe the technical setting a case came
+   out of and never name the software. This is enforced by the validator, not by
+   discipline.
 
 No analytics, no cookies, no tracking.
 
