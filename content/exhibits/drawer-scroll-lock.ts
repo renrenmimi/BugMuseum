@@ -1,12 +1,12 @@
 import type { Exhibit } from "../schema";
+import { MUSEUM_REPO } from "../schema";
 
-const REPO = "https://github.com/renrenmimi/DrillLab";
-const PR = `${REPO}/pull/16`;
-const SQUASH = `${REPO}/commit/e5d430d4012c2fea6bf011a5c481d8ff53534b38`;
-const FIRST = `${REPO}/commit/37fc4d23fc137e83ad813d1d395aaa6759dc55f0`;
-const FINAL = `${REPO}/commit/e91a1e09a736807a6e269ca3e301de3f4a7e43aa`;
-const SHELL = `${REPO}/blob/main/components/app-shell.tsx`;
-const BASE_CSS = `${REPO}/blob/main/styles/base.css#L11-L15`;
+const file = (path: string) => `${MUSEUM_REPO}/blob/main/${path}`;
+
+const DEFINITION = file("content/exhibits/drawer-scroll-lock.ts");
+const SIMULATION = file("components/sims/drawer/drawer-sim.tsx");
+const CASE_CSS = file("components/sims/drawer/drawer.module.css");
+const E2E = file("tests/e2e/drawer.spec.ts");
 
 export const drawerScrollLock: Exhibit = {
   slug: "drawer-scroll-lock",
@@ -15,14 +15,13 @@ export const drawerScrollLock: Exhibit = {
   summary:
     "A mobile navigation drawer left the page behind it scrollable, and the fix for that made the page take a 1.5-second tour back to where it started.",
   featured: true,
-  project: {
-    name: "DrillLab",
-    repo: "renrenmimi/DrillLab",
-    href: REPO,
-    blurb: "A study site for interview drills, read mostly on a phone.",
+  context: {
+    label: "Learning interface",
+    description:
+      "A study interface read mostly on a phone, where the sidebar collapses into a drawer below 960px.",
   },
   categories: ["browser", "state"],
-  tech: ["Next.js", "React", "CSS", "iOS Safari", "Playwright"],
+  tech: ["React", "CSS", "Mobile Safari", "Playwright"],
   simulation: "drawer-scroll-lock",
 
   states: [
@@ -62,49 +61,45 @@ export const drawerScrollLock: Exhibit = {
   ],
 
   whatHappened: [
-    "DrillLab is mostly read on a phone, so under 960px the sidebar becomes a drawer with a translucent scrim behind it. Someone opened the drawer halfway down a long lesson, dragged a finger over the scrim, and the lesson underneath went with it.",
-    "A scrim is a click target. It absorbs pointer events, which is why tapping it closes the drawer — but it does not stop the page underneath from scrolling. Measured on a 390px viewport, dragging over the scrim moved the background by about 88 pixels. Closing the drawer then dropped you somewhere you had never been, which reads as the page jumping.",
-    "The first fix locked the body. That worked, and it introduced a second, quieter defect: closing the drawer at scroll position 2055 dropped scrollY to 0 and then took roughly 1.5 seconds to travel back to 2054.5. Nothing was broken any more — the page just took a scenic route home in front of you.",
+    "The interface was read mostly on phones, so below 960px the sidebar became a drawer with a translucent scrim behind it. Someone opened the drawer halfway down a long page, dragged a finger over the scrim, and the page underneath went with it.",
+    "A scrim is a click target. It absorbs pointer events, which is why tapping it closes the drawer — but it does not stop the page underneath from scrolling. Dragging over it moved the background by the better part of a hundred pixels. Closing the drawer then dropped you somewhere you had never been, which reads as the page jumping.",
+    "The first fix locked the body. That worked, and it introduced a second, quieter defect: closing the drawer dropped the scroll offset to zero and then took about a second and a half to travel back. Nothing was broken any more — the page just took a scenic route home in front of you.",
   ],
 
   rootCause: [
-    "Locking a page in a browser means taking the document out of the scroll flow, and the only reliable way to do that on iOS Safari is `position: fixed` on the body with a negative `top` equal to the current scroll offset. `overflow: hidden` on the body is quietly ignored there, and a phone is exactly where this bug lives.",
-    "But while the body is fixed, the document's own scroll offset is zero. Unlocking therefore has to put it back by hand, with `window.scrollTo`. And `window.scrollTo` is not a jump: it obeys the CSS `scroll-behavior` of the scrolling element. DrillLab sets `scroll-behavior: smooth` on `html` globally, so the restore became an animation.",
+    "Locking a page in a browser means taking the document out of the scroll flow, and the only reliable way to do that on mobile Safari is `position: fixed` on the body with a negative `top` equal to the current scroll offset. `overflow: hidden` on the body is quietly ignored there, and a phone is exactly where this bug lives.",
+    "But while the body is fixed, the document's own scroll offset is zero. Unlocking therefore has to put it back by hand, with `window.scrollTo`. And `window.scrollTo` is not a jump: it obeys the CSS `scroll-behavior` of the scrolling element. The stylesheet set `scroll-behavior: smooth` on `html` globally, months earlier, for anchor links. The restore inherited it and became an animation.",
     "Returning focus to the hamburger button had the same problem from a different direction. `element.focus()` scrolls the element into view, smoothly, which undoes a restore that has only just landed.",
   ],
 
   whyFirstFixFailed: [
     "It did not fail — it was correct, and incomplete. The lock was right; the way out of the lock inherited a global CSS rule nobody was thinking about at the time.",
-    "This is the shape most real bugs have. `position: fixed` and `scrollTo` are each individually right, and the seam between them picks up `scroll-behavior: smooth` from a stylesheet written months earlier for a completely different reason.",
-    "The real fix is small and fussy: flip the root element's inline `scroll-behavior` to `auto`, restore the position, then put the **previous inline value** back rather than hard-coding `auto` — otherwise every other smooth scroll on the site is permanently disabled by the drawer. And focus with `preventScroll: true`.",
+    "This is the shape most real bugs have. `position: fixed` and `scrollTo` are each individually right, and the seam between them picks up `scroll-behavior: smooth` from a stylesheet written for a completely different reason.",
+    "The complete fix is small and fussy: flip the root element's inline `scroll-behavior` to `auto`, restore the position, then put the **previous inline value** back rather than hard-coding `auto` — otherwise every other smooth scroll on the site is permanently disabled by the drawer. And return focus with `preventScroll: true`.",
   ],
 
   excerpts: [
     {
-      caption: "styles/base.css — the rule that made the restore an animation",
+      caption: "The global rule that turned the restore into an animation",
       kind: "code",
       language: "css",
-      verbatim: true,
-      href: BASE_CSS,
+      origin: "reproduction",
       lines: [
         "html {",
-        "  -webkit-text-size-adjust: 100%;",
+        "  /* Added for anchor links. Nothing to do with the drawer. */",
         "  scroll-behavior: smooth;",
-        "  scroll-padding-top: calc(var(--topbar-h) + 16px);",
         "}",
       ],
     },
     {
-      caption: "components/app-shell.tsx — locking the body when the drawer opens",
+      caption: "Locking the body when the drawer opens",
       kind: "code",
       language: "tsx",
-      verbatim: true,
-      href: SHELL,
+      origin: "reproduction",
       lines: [
         "useEffect(() => {",
-        "  if (!drawer || !narrow) return;",
+        "  if (!open || !narrow) return;",
         "",
-        "  restoreScroll.current = true;",
         "  const y = window.scrollY;",
         "  const body = document.body;",
         "  const gutter =",
@@ -120,11 +115,10 @@ export const drawerScrollLock: Exhibit = {
       ],
     },
     {
-      caption: "components/app-shell.tsx — the restore, before and after",
+      caption: "The restore, before and after",
       kind: "diff",
       language: "tsx",
-      verbatim: true,
-      href: FINAL,
+      origin: "reproduction",
       lines: [
         "   return () => {",
         "     Object.assign(body.style, before);",
@@ -142,15 +136,14 @@ export const drawerScrollLock: Exhibit = {
       ],
     },
     {
-      caption: "components/app-shell.tsx — and the same problem, via focus",
+      caption: "And the same problem, via focus",
       kind: "diff",
       language: "tsx",
-      verbatim: true,
-      href: FINAL,
+      origin: "reproduction",
       lines: [
         "   if (e.key === \"Escape\") {",
         "     e.preventDefault();",
-        "     setDrawer(false);",
+        "     setOpen(false);",
         "-    openerRef.current?.focus();",
         "+    // Without preventScroll the browser scrolls the hamburger",
         "+    // into view — smoothly — and undoes the restore.",
@@ -159,31 +152,65 @@ export const drawerScrollLock: Exhibit = {
         "   }",
       ],
     },
+    {
+      caption: "components/sims/drawer/drawer-sim.tsx — how the frames are sampled",
+      kind: "code",
+      language: "tsx",
+      origin: "museum-source",
+      href: SIMULATION,
+      lines: [
+        "const sampleFrames = useCallback(() => {",
+        "  const vp = viewportRef.current;",
+        "  if (!vp) return;",
+        "  const seen: number[] = [];",
+        "  let n = 0;",
+        "  const step = () => {",
+        "    seen.push(Math.round(vp.scrollTop));",
+        "    n += 1;",
+        "    if (n < 5) {",
+        "      requestAnimationFrame(step);",
+        "    } else {",
+        "      setFrames(seen);",
+        "    }",
+        "  };",
+        "  requestAnimationFrame(step);",
+        "}, []);",
+      ],
+    },
   ],
 
   test: {
     intro: [
-      "Two Playwright probes, both run in each direction: once against the fix, and once with the fix removed to confirm they actually fail.",
-      "The first probe locks the page and then attacks it — wheel events, `window.scrollTo`, a drag over the scrim — at 360, 390, 768 and 960px. With the fix, the background does not move and Escape lands on the same pixel. Without it, the background travels from 374 to 1115 and twelve assertions fail.",
-      "The second probe is the interesting one. It cannot wait for a smooth scroll to settle, because waiting is exactly what hides the bug: give it two seconds and the broken version arrives too. So it samples five consecutive `requestAnimationFrame` callbacks and asserts the position is already right on the second frame. It also asserts that the computed `scroll-behavior` really is `smooth` before it starts — otherwise the test would pass for the wrong reason on a browser that ignores the rule. Without the fix, the frames read 0 → 0 → 1 → 4 → 9, and 48 of 64 assertions fail.",
-      "This museum ships its own version of that probe against the simulation, in tests/e2e/exhibit-drawer.spec.ts.",
+      "The interesting problem with testing this is that patience hides it. Wait two seconds after closing the drawer and the animated restore has arrived too — the broken version passes.",
+      "So the simulation samples five consecutive `requestAnimationFrame` callbacks after every close and puts the numbers on screen, and the test asserts against the second frame rather than the settled value. In the Fixed state the strip reads the same number five times; in First fix it reads something like `0 → 2 → 6 → 12 → 19`.",
+      "A separate test asserts that the phone's scroll container really is in `scroll-behavior: smooth` mode before any of that runs. Without it the whole suite would pass for the wrong reason on a browser that ignores the rule, and the exhibit would be demonstrating nothing.",
+      "The rest of the spec attacks the lock directly: wheel events and `scrollTop` writes over the scrim, at 1280px and 390px, and all three ways of closing landing on the same pixel.",
     ],
     excerpt: {
-      caption: "The frame-sampling assertion (Bug Museum's port of lock2.mjs)",
+      caption: "tests/e2e/drawer.spec.ts",
       kind: "code",
       language: "ts",
-      verbatim: false,
+      origin: "museum-source",
+      href: E2E,
       lines: [
-        "// Waiting for the scroll to settle is what hides this bug.",
-        "// Sample frames instead, and refuse to run at all unless the",
-        "// container really is scrolling smoothly.",
-        "expect(await computedScrollBehavior(page)).toBe(\"smooth\");",
+        "test(\"Fixed: the position is back by the second frame\", async ({",
+        "  page,",
+        "}) => {",
+        "  await selectState(page, /^Fixed$/);",
+        "  const y = await scrollToMiddle(page);",
+        "  await openDrawer(page);",
         "",
-        "const frames = await sampleFramesAfterClose(page, 5);",
+        "  await page.getByRole(\"button\", { name: \"Push the background\" }).click();",
+        "  await expect(page.getByText(/the page is locked/)).toBeVisible();",
         "",
-        "expect(frames[0]).toBeGreaterThan(target - 4);  // never drops to 0",
-        "expect(frames[1]).toBe(target);                 // back by frame two",
-        "expect(new Set(frames.slice(1)).size).toBe(1);  // and then still",
+        "  await page.getByRole(\"button\", { name: \"Close the drawer\" }).click();",
+        "",
+        "  const verdict = page.getByTestId(\"frame-verdict\");",
+        "  await expect(verdict).toContainText(\"by frame two\");",
+        "  await expect(verdict).toContainText(String(y));",
+        "",
+        "  expect(await scrollTop(page)).toBe(y);",
+        "});",
       ],
     },
   },
@@ -193,74 +220,59 @@ export const drawerScrollLock: Exhibit = {
       phase: "discovered",
       title: "The page moved behind the drawer",
       detail:
-        "Reported from a phone: open the sidebar halfway down a lesson, drag over the scrim, and the lesson scrolls. Measured at about 88px on a 390px viewport.",
-      source: { kind: "pull-request", label: "DrillLab PR #16", href: PR },
+        "Reported from a phone: open the sidebar halfway down a long page, drag over the scrim, and the page scrolls. The Broken state in the case reproduces it — the readout shows the offset changing while the drawer is open.",
+      source: { kind: "simulation", label: "The simulation", href: SIMULATION },
     },
     {
       phase: "attempted",
       title: "Lock the body with position: fixed",
       detail:
-        "`position: fixed` with a negative `top`, not `overflow: hidden`, because iOS Safari ignores the latter on the body. Restore the offset on close, skip the restore when navigating away, and pad for the disappearing scrollbar.",
-      source: {
-        kind: "commit",
-        label: "37fc4d2 — lock the page behind the drawer",
-        href: FIRST,
-      },
+        "`position: fixed` with a negative `top`, not `overflow: hidden`, because mobile Safari ignores the latter on the body. Restore the offset on close, skip the restore when navigating away, and pad for the disappearing scrollbar.",
     },
     {
       phase: "fixed",
       title: "Restore instantly, and give focus back without scrolling",
       detail:
         "Set the root element's inline `scroll-behavior` to `auto` around the `scrollTo`, put the previous inline value back afterwards, and return focus with `preventScroll: true`.",
-      source: {
-        kind: "commit",
-        label: "e91a1e0 — restore the scroll position instantly",
-        href: FINAL,
-      },
     },
     {
       phase: "regression-test",
-      title: "Four widths, three ways to close, sampled frame by frame",
+      title: "Sampled frame by frame, at two widths, three ways out",
       detail:
-        "360 / 390 / 768 / 960px × Escape, scrim and hamburger. 64 assertions pass; with the fix removed, 48 fail. The probe asserts the page is genuinely in smooth-scrolling mode first, so it cannot pass vacuously.",
-      source: { kind: "commit", label: "e5d430d (squash)", href: SQUASH },
+        "The spec refuses to wait for the scroll to settle and asserts on the second frame instead. It also asserts the container is genuinely smooth-scrolling first, so it cannot pass vacuously.",
+      source: { kind: "regression-test", label: "tests/e2e/drawer.spec.ts", href: E2E },
     },
   ],
 
   sources: [
     {
-      kind: "pull-request",
-      label: "PR #16 — fix(mobile): lock the page behind the drawer",
-      href: PR,
-      note: "The report, both fixes, and the measured numbers.",
+      kind: "exhibit-definition",
+      label: "content/exhibits/drawer-scroll-lock.ts",
+      href: DEFINITION,
+      note: "Every word on this page, as data.",
     },
     {
-      kind: "commit",
-      label: "e5d430d — the squash commit on main",
-      href: SQUASH,
+      kind: "simulation",
+      label: "components/sims/drawer/drawer-sim.tsx",
+      href: SIMULATION,
+      note: "All three code paths, and the frame sampler.",
     },
     {
-      kind: "commit",
-      label: "37fc4d2 — the first fix",
-      href: FIRST,
-      note: "Locks the body. Correct, and not yet enough.",
+      kind: "simulation-logic",
+      label: "components/sims/drawer/drawer.module.css",
+      href: CASE_CSS,
+      note: "Where the phone's scroll container gets scroll-behavior: smooth.",
     },
     {
-      kind: "commit",
-      label: "e91a1e0 — the second fix",
-      href: FINAL,
-      note: "Makes the restore instant.",
-    },
-    { kind: "file", label: "components/app-shell.tsx", href: SHELL },
-    {
-      kind: "file",
-      label: "styles/base.css — scroll-behavior: smooth",
-      href: BASE_CSS,
+      kind: "regression-test",
+      label: "tests/e2e/drawer.spec.ts",
+      href: E2E,
+      note: "22 assertions across two viewport widths.",
     },
   ],
 
   evidence:
-    "DrillLab PR #16, squashed to e5d430d, with the two fixes as separate commits on the branch.",
+    "Three code paths in one component, switchable above. The difference between the last two is asserted frame by frame rather than after the scroll settles.",
   simulationNote:
-    "The phone in the case is a scroll container in this page, not DrillLab. It runs the same three implementations against a `scroll-behavior: smooth` element, so the difference you see between First fix and Fixed is the real mechanism — but the content, the 1.5-second duration and the pixel numbers are this browser's, not the ones measured in the report.",
+    "The phone in the case is a scroll container in this page. It runs all three implementations against an element that really does carry `scroll-behavior: smooth`, so the difference you see between First fix and Fixed is the real mechanism — but the content, the timings and the pixel numbers are this browser's, not a recording of anything.",
 };
