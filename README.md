@@ -159,6 +159,13 @@ npm run e2e          # Playwright: 138 tests against `next start`, at 1280px and
 `npm run verify` runs typecheck, lint, unit tests and the production build in
 one go.
 
+The same suite runs against a deployment — every assertion is behavioural, so
+none of it depends on being local:
+
+```bash
+BASE_URL=https://bugmuseum.vercel.app npm run e2e
+```
+
 Playwright deliberately runs against the production build. Two of the bugs in
 this collection are timing bugs, and the dev server is neither the same bundle
 nor the same timing.

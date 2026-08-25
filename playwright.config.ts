@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.PORT ?? 3123);
-const BASE_URL = `http://127.0.0.1:${PORT}`;
+/* Point BASE_URL at a deployment to run the same suite against it — the
+   assertions are all behavioural, so they hold against real infrastructure
+   as well as a local `next start`. */
+const BASE_URL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}`;
+const LOCAL = !process.env.BASE_URL;
 
 /**
  * Everything runs against `next start`, not the dev server: the bugs this
@@ -30,11 +34,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 780 } },
     },
   ],
-  webServer: {
-    command: `npx next start -p ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    stdout: "ignore",
-  },
+  webServer: LOCAL
+    ? {
+        command: `npx next start -p ${PORT}`,
+        url: BASE_URL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+        stdout: "ignore",
+      }
+    : undefined,
 });
