@@ -114,7 +114,7 @@ export function ExhibitStage({
 
       <DisplayCase
         label={`Exhibit ${String(exhibit.number).padStart(2, "0")} — ${card.label}`}
-        aside={<span className={s.caseProject}>{exhibit.project.name}</span>}
+        aside={<span className={s.caseProject}>{exhibit.context.label}</span>}
         note={<RichText text={exhibit.simulationNote} />}
       >
         <Simulation key={active} state={active} />

@@ -16,7 +16,7 @@ const CLAIMS = [
   },
   {
     lead: "A passing test is not the same as a working system.",
-    body: "One exhibit's unit tests stayed green through the entire life of the bug, because they called the method once and the app called it twice.",
+    body: "One of these cases had unit tests that stayed green through the entire life of the bug, because they called the method once and the app called it twice.",
   },
 ];
 
@@ -31,7 +31,7 @@ const VISIT = [
   },
   {
     title: "Then read the label",
-    body: "The explanation, the diff and the regression test are underneath, along with a link to the commit each claim comes from.",
+    body: "The explanation, the reproduction and the regression test are underneath, each linked to the file in this repository that holds it.",
   },
 ];
 
@@ -48,9 +48,9 @@ export default function HomePage() {
             Real bugs, with the working&nbsp;out left in.
           </h1>
           <p className={s.standfirst}>
-            Six defects from four of my own projects. Each one is here as an
-            object you can handle: break it, watch the fix land, then read why
-            it happened and what stops it coming back.
+            Six defects from real project work, with the names taken off. Each
+            one is here as an object you can handle: break it, watch the fix
+            land, then read why it happened and what stops it coming back.
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function HomePage() {
             <p className={s.featuredSummary}>{featured.summary}</p>
             <div className={s.meta}>
               <span className={`${s.metaTag} ${s.metaPlain}`}>
-                {featured.project.name}
+                {featured.context.label}
               </span>
               {featured.categories.map((c) => (
                 <span key={c} className={s.metaTag}>

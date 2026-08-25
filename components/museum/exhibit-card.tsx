@@ -17,7 +17,7 @@ export function ExhibitCard({ exhibit }: { exhibit: Exhibit }) {
     <article className={s.card}>
       <div className={s.cardTop}>
         <span className={s.cardNumber}>No. {number}</span>
-        <span className={s.cardProject}>{exhibit.project.name}</span>
+        <span className={s.cardProject}>{exhibit.context.label}</span>
       </div>
 
       <h3 className={s.cardTitle}>

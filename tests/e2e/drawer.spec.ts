@@ -1,15 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /* ============================================================
-   Exhibit 01, in the museum's own words: the port of DrillLab's
-   lock2.mjs. The assertion that matters is a frame sample — if you
-   wait for the scroll to settle, the broken version arrives too
-   and the test passes for the wrong reason.
+   Exhibit 01. The assertion that matters is a frame sample: if you
+   wait for the scroll to settle, the broken version arrives too and
+   the test passes for the wrong reason.
    ============================================================ */
 
 const URL = "/exhibits/drawer-scroll-lock";
 
 const viewport = (page: Page) => page.locator("[class*=viewport]").first();
+/* The exhibit page quotes this very spec, so a bare getByText would also match
+   the code excerpt. Every log assertion is scoped to the log. */
+const log = (page: Page) =>
+  page.getByRole("list", { name: "Drawer simulation event log" });
 const scrollTop = (page: Page) =>
   viewport(page).evaluate((el) => Math.round(el.scrollTop));
 
@@ -53,7 +56,7 @@ test("Broken: the page keeps moving behind the drawer", async ({ page }) => {
 
   const after = await scrollTop(page);
   expect(after).toBeGreaterThan(y);
-  await expect(page.getByText(/scrollTop moved/)).toBeVisible();
+  await expect(log(page).getByText(/scrollTop moved/)).toBeVisible();
 });
 
 test("First fix: the background is locked but the restore is animated", async ({
@@ -64,7 +67,7 @@ test("First fix: the background is locked but the restore is animated", async ({
   await openDrawer(page);
 
   await page.getByRole("button", { name: "Push the background" }).click();
-  await expect(page.getByText(/the page is locked/)).toBeVisible();
+  await expect(log(page).getByText(/the page is locked/)).toBeVisible();
 
   await page.getByRole("button", { name: "Close the drawer" }).click();
 
@@ -80,7 +83,7 @@ test("Fixed: the position is back by the second frame", async ({ page }) => {
   await openDrawer(page);
 
   await page.getByRole("button", { name: "Push the background" }).click();
-  await expect(page.getByText(/the page is locked/)).toBeVisible();
+  await expect(log(page).getByText(/the page is locked/)).toBeVisible();
 
   await page.getByRole("button", { name: "Close the drawer" }).click();
 
@@ -152,7 +155,7 @@ test("following a link in the drawer starts the new page at the top", async ({
 
   await page.getByRole("button", { name: "Graphs" }).click();
 
-  await expect(page.getByText("followed a link to Graphs")).toBeVisible();
+  await expect(log(page).getByText("followed a link to Graphs")).toBeVisible();
   await expect
     .poll(async () => scrollTop(page), { timeout: 2000 })
     .toBe(0);

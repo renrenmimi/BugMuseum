@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { exhibits, getExhibit, neighbours, usedCategories } from "@/content/exhibits";
-import { SIMULATIONS, validateGallery } from "@/content/schema";
+import {
+  CONTEXT_LABELS,
+  MUSEUM_REPO,
+  SIMULATIONS,
+  isAllowedHref,
+  validateGallery,
+} from "@/content/schema";
 import { SIM_REGISTRY } from "@/components/sims/registry";
 
 describe("the gallery as data", () => {
@@ -34,50 +40,78 @@ describe("the gallery as data", () => {
 });
 
 describe("source links", () => {
-  it("gives every exhibit at least one commit or pull request", () => {
+  it("gives every exhibit its definition, its simulation and its test", () => {
     for (const exhibit of exhibits) {
-      const proofs = exhibit.sources.filter(
-        (s) => s.kind === "commit" || s.kind === "pull-request",
-      );
-      expect(proofs.length, exhibit.slug).toBeGreaterThan(0);
+      const kinds = new Set(exhibit.sources.map((s) => s.kind));
+      expect(kinds.has("exhibit-definition"), exhibit.slug).toBe(true);
+      expect(kinds.has("simulation"), exhibit.slug).toBe(true);
+      expect(kinds.has("regression-test"), exhibit.slug).toBe(true);
     }
   });
 
-  it("points every link at one of my public repositories", () => {
-    const allowed = ["DrillLab", "PetNote", "ToneDown", "AgentLab"];
+  it("only links inside this project", () => {
     for (const exhibit of exhibits) {
       const hrefs = [
-        exhibit.project.href,
         ...exhibit.sources.map((s) => s.href),
         ...exhibit.timeline.flatMap((t) => (t.source ? [t.source.href] : [])),
         ...exhibit.excerpts.flatMap((e) => (e.href ? [e.href] : [])),
+        ...(exhibit.test.excerpt.href ? [exhibit.test.excerpt.href] : []),
       ];
+      expect(hrefs.length).toBeGreaterThan(0);
       for (const href of hrefs) {
-        expect(href, `${exhibit.slug}: ${href}`).toMatch(
-          new RegExp(`^https://github\\.com/renrenmimi/(${allowed.join("|")})`),
-        );
+        expect(isAllowedHref(href), `${exhibit.slug}: ${href}`).toBe(true);
       }
     }
   });
 
-  it("never uses http, and never links to a placeholder", () => {
-    for (const exhibit of exhibits) {
-      for (const source of exhibit.sources) {
-        expect(source.href.startsWith("https://")).toBe(true);
-        expect(source.href).not.toContain("example.com");
-        expect(source.href).not.toContain("TODO");
-      }
-    }
+  it("rejects a link to a different repository under the same owner", () => {
+    /* Built from MUSEUM_REPO rather than written out, so this file does not
+       itself contain a link to another repository under the same owner. */
+    const sameOwnerOtherRepo = MUSEUM_REPO.replace(/BugMuseum$/, "SomeOtherRepo");
+    const otherOwner = MUSEUM_REPO.replace("/renrenmimi/", "/someone-else/");
+
+    expect(isAllowedHref(`${MUSEUM_REPO}/blob/main/lib/sims/local-day.ts`)).toBe(
+      true,
+    );
+    expect(isAllowedHref("/exhibits/local-day-boundary")).toBe(true);
+    expect(isAllowedHref(sameOwnerOtherRepo)).toBe(false);
+    expect(isAllowedHref(otherOwner)).toBe(false);
+    expect(isAllowedHref(MUSEUM_REPO.replace("https:", "http:"))).toBe(false);
+    expect(isAllowedHref("https://example.com/")).toBe(false);
   });
 
-  it("links every quoted excerpt to the file or commit it came from", () => {
+  it("links every excerpt that claims to be quoted from here", () => {
     for (const exhibit of exhibits) {
       const all = [...exhibit.excerpts, exhibit.test.excerpt];
       for (const excerpt of all) {
-        if (excerpt.verbatim) {
+        if (excerpt.origin === "museum-source") {
           expect(excerpt.href, `${exhibit.slug}: ${excerpt.caption}`).toBeTruthy();
         }
       }
+    }
+  });
+
+  it("shows every regression test from this repository rather than illustrating one", () => {
+    for (const exhibit of exhibits) {
+      expect(exhibit.test.excerpt.origin, exhibit.slug).toBe("museum-source");
+    }
+  });
+});
+
+describe("the exhibit context", () => {
+  it("uses an approved label, and no two exhibits share one", () => {
+    const labels = exhibits.map((e) => e.context.label);
+    for (const label of labels) {
+      expect(CONTEXT_LABELS).toContain(label);
+    }
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it("carries no project identity, hidden or otherwise", () => {
+    for (const exhibit of exhibits) {
+      const keys = Object.keys(exhibit.context).sort();
+      expect(keys, exhibit.slug).toEqual(["description", "label"]);
+      expect(exhibit).not.toHaveProperty("project");
     }
   });
 });

@@ -59,12 +59,19 @@
   white-space: nowrap;
 }
 
-.metaProject {
+.metaContext {
   color: var(--accent);
   border-color: var(--rule-strong);
 }
 
-/* Names are names: DrillLab and iOS Safari do not survive text-transform. */
+.context {
+  color: var(--ink-2);
+  font-size: var(--t-3);
+  line-height: 1.6;
+  max-width: var(--measure);
+}
+
+/* Names are names: "Mobile Safari" does not survive text-transform. */
 .metaPlain {
   text-transform: none;
   letter-spacing: 0.03em;

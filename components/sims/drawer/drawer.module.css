@@ -78,8 +78,8 @@
   min-height: 100%;
 }
 
-/* Above the scrim and the drawer, like DrillLab's top bar: the hamburger
-   has to stay reachable while the drawer is open. */
+/* Above the scrim and the drawer: the hamburger has to stay reachable
+   while the drawer is open. */
 .topbar {
   position: sticky;
   top: 0;
