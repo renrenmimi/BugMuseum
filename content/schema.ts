@@ -6,9 +6,17 @@
    in content/exhibits and registering a simulation id — no page,
    route or layout work.
 
-   The validator below is not decoration: a museum about bugs that
-   ships a malformed exhibit would be embarrassing, so the rules are
-   enforced by tests (tests/unit/exhibits.test.ts).
+   Two kinds of rule are enforced here, both by tests:
+
+   1. Completeness — an exhibit that is missing its root cause, or
+      claims a first fix without explaining why it was not enough,
+      is not an exhibit.
+   2. Privacy — the debugging cases in this museum came out of real
+      project work, and the projects themselves are not the point.
+      An exhibit describes the technical context it happened in and
+      links only to artifacts inside this repository. See
+      findPrivacyIssues() for how that is checked without this file
+      naming anything it is trying to keep out.
    ============================================================ */
 
 export const STATE_KEYS = ["broken", "first-fix", "fixed"] as const;
@@ -42,21 +50,66 @@ export const SIMULATIONS = [
 ] as const;
 export type SimulationId = (typeof SIMULATIONS)[number];
 
-export type SourceKind = "pull-request" | "commit" | "file" | "repository";
+/**
+ * The technical setting a case came out of, described by what it is rather
+ * than what it was called. These are the only labels an exhibit may use.
+ */
+export const CONTEXT_LABELS = [
+  "Learning interface",
+  "API resilience layer",
+  "Daily practice tracker",
+  "Voice session",
+  "Multi-tab account flow",
+  "Guided coding exercise",
+] as const;
+export type ContextLabel = (typeof CONTEXT_LABELS)[number];
+
+export interface ExhibitContext {
+  label: ContextLabel;
+  /** One sentence on the kind of software this happened in. */
+  description: string;
+}
+
+/**
+ * Every source link points at something in this repository, because that is
+ * the only provenance a visitor can actually check.
+ */
+export type SourceKind =
+  | "exhibit-definition"
+  | "simulation"
+  | "simulation-logic"
+  | "regression-test"
+  | "commit";
+
+export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
+  "exhibit-definition": "Exhibit data",
+  simulation: "Simulation",
+  "simulation-logic": "Logic",
+  "regression-test": "Test",
+  commit: "Commit",
+};
 
 export interface SourceLink {
   kind: SourceKind;
   /** What the visitor is about to open, in their words. */
   label: string;
   href: string;
-  /** Optional one-line note about what this link proves. */
+  /** Optional one-line note about what this link shows. */
   note?: string;
 }
 
 export type ExcerptKind = "diff" | "code";
 
+/**
+ * Where an excerpt's text comes from, stated rather than implied.
+ *
+ * - "reproduction": a minimal, generic rewrite of the pattern being described.
+ *   It is not copied from anywhere and is not presented as a quotation.
+ * - "museum-source": copied from a file in this repository, which is linked.
+ */
+export type ExcerptOrigin = "reproduction" | "museum-source";
+
 export interface CodeExcerpt {
-  /** "components/app-shell.tsx — the restore" */
   caption: string;
   kind: ExcerptKind;
   language: "tsx" | "ts" | "css" | "text";
@@ -65,10 +118,9 @@ export interface CodeExcerpt {
    * Kept as an array so no template literal has to survive prettier.
    */
   lines: readonly string[];
-  /** Where this excerpt was copied from. Required for verbatim quotes. */
+  origin: ExcerptOrigin;
+  /** Required for "museum-source": the file it was copied from. */
   href?: string;
-  /** True when the text is quoted from the source repository unchanged. */
-  verbatim: boolean;
 }
 
 export interface ExhibitStateCard {
@@ -95,10 +147,10 @@ export const TIMELINE_PHASES: readonly TimelinePhase[] = [
 ];
 
 export const TIMELINE_PHASE_LABELS: Record<TimelinePhase, string> = {
-  discovered: "Discovered",
-  attempted: "Attempted fix",
+  discovered: "Observed",
+  attempted: "First fix",
   fixed: "Final fix",
-  "regression-test": "Regression test",
+  "regression-test": "Pinned by a test",
 };
 
 export interface TimelineEntry {
@@ -106,15 +158,6 @@ export interface TimelineEntry {
   title: string;
   detail: string;
   source?: SourceLink;
-}
-
-export interface Project {
-  name: string;
-  /** owner/repo */
-  repo: string;
-  href: string;
-  /** One line about what the project is, for visitors who have not seen it. */
-  blurb: string;
 }
 
 export interface RegressionTest {
@@ -130,7 +173,7 @@ export interface Exhibit {
   title: string;
   /** Exactly one sentence. */
   summary: string;
-  project: Project;
+  context: ExhibitContext;
   categories: readonly Category[];
   tech: readonly string[];
   simulation: SimulationId;
@@ -144,7 +187,7 @@ export interface Exhibit {
   excerpts: readonly CodeExcerpt[];
   timeline: readonly TimelineEntry[];
   sources: readonly SourceLink[];
-  /** One line naming the artefact that proves this happened. */
+  /** One line: what a visitor can check here, on this site. */
   evidence: string;
   /** What the simulation reproduces rather than runs. Never omitted. */
   simulationNote: string;
@@ -152,15 +195,181 @@ export interface Exhibit {
 }
 
 /* ------------------------------------------------------------
-   Validation
+   Link rules
+
+   A source link is either somewhere on this site, or a file in this
+   repository. Nothing else is allowed — in particular, a link to a
+   different repository under the same owner is a failure, not a
+   near miss.
    ------------------------------------------------------------ */
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const GITHUB_SOURCE = /^https:\/\/github\.com\/renrenmimi\/[A-Za-z0-9._-]+/;
+export const MUSEUM_REPO = "https://github.com/renrenmimi/BugMuseum";
+const MUSEUM_LINK = new RegExp(`^${MUSEUM_REPO}(?:/|$)`);
+const SITE_RELATIVE = /^\/(?![/\\])/;
+const OWNER_LINK = /https:\/\/github\.com\/renrenmimi\/([A-Za-z0-9._-]+)/g;
+
+export function isAllowedHref(href: string): boolean {
+  return SITE_RELATIVE.test(href) || MUSEUM_LINK.test(href);
+}
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
+
+/* ------------------------------------------------------------
+   Privacy rules
+
+   Deliberately expressed as patterns rather than as a list of the
+   names being kept out: a deny-list would put those names back into
+   a tracked file, which is the thing being avoided. The patterns
+   below catch the shapes that leak provenance.
+   ------------------------------------------------------------ */
+
+/** A bare commit hash. Seven to forty hex characters, on its own. */
+const BARE_SHA = /\b(?=[0-9a-f]*\d)[0-9a-f]{7,40}\b/g;
+
+/** "PR #12", "pull request #12", "pull/12". */
+const PR_REFERENCE = /\b(?:PR|pull request)\s*#\s*\d+|\/pull\/\d+/gi;
+
+/**
+ * Words with an internal capital: the shape a product name takes. Technology
+ * names are allowed by name; anything else has to be added here on purpose,
+ * which is the point — a new product name trips this rather than shipping.
+ */
+const INTERNAL_CAPITAL = /\b[A-Z][a-z]+(?:[A-Z][a-z]*)+\b/g;
+
+const ALLOWED_NAMES: readonly string[] = [
+  // this project, and where it lives
+  "BugMuseum",
+  "GitHub",
+  // languages, runtimes, libraries, tools
+  "TypeScript",
+  "JavaScript",
+  "NextJs",
+  "OpenGraph",
+  // browser and platform APIs referred to by name
+  "SpeechRecognition",
+  "IntersectionObserver",
+  "ResizeObserver",
+  "StrictMode",
+  // identifiers that appear in the reproductions
+  "CircuitBreaker",
+  "BreakerOpenError",
+  "AuthContext",
+  "UserProfile",
+  "HttpsError",
+];
+
+export interface PrivacyIssue {
+  field: string;
+  problem: string;
+}
+
+/**
+ * Scans one piece of text for anything that would identify where a case came
+ * from. Exported so the same rules can be run over the README and over
+ * rendered pages, not just over exhibit data.
+ */
+export function findTextPrivacyIssues(
+  text: string,
+  field: string,
+): PrivacyIssue[] {
+  const issues: PrivacyIssue[] = [];
+
+  for (const [, repo] of text.matchAll(OWNER_LINK)) {
+    if (repo !== "BugMuseum") {
+      issues.push({
+        field,
+        problem: `links to another repository under the same owner: ${repo}`,
+      });
+    }
+  }
+
+  for (const match of text.matchAll(BARE_SHA)) {
+    issues.push({ field, problem: `looks like a commit hash: ${match[0]}` });
+  }
+
+  for (const match of text.matchAll(PR_REFERENCE)) {
+    issues.push({
+      field,
+      problem: `references a pull request elsewhere: ${match[0].trim()}`,
+    });
+  }
+
+  for (const match of text.matchAll(INTERNAL_CAPITAL)) {
+    const word = match[0];
+    if (!ALLOWED_NAMES.includes(word)) {
+      issues.push({
+        field,
+        problem: `reads like a product name: ${word} (add it to ALLOWED_NAMES if it is a technology)`,
+      });
+    }
+  }
+
+  return issues;
+}
+
+/** Every string an exhibit renders, paired with where it came from. */
+export function exhibitStrings(exhibit: Exhibit): [string, string][] {
+  const out: [string, string][] = [
+    ["title", exhibit.title],
+    ["summary", exhibit.summary],
+    ["context.label", exhibit.context.label],
+    ["context.description", exhibit.context.description],
+    ["evidence", exhibit.evidence],
+    ["simulationNote", exhibit.simulationNote],
+  ];
+
+  exhibit.tech.forEach((t, i) => out.push([`tech[${i}]`, t]));
+  exhibit.whatHappened.forEach((p, i) => out.push([`whatHappened[${i}]`, p]));
+  exhibit.rootCause.forEach((p, i) => out.push([`rootCause[${i}]`, p]));
+  (exhibit.whyFirstFixFailed ?? []).forEach((p, i) =>
+    out.push([`whyFirstFixFailed[${i}]`, p]),
+  );
+  exhibit.test.intro.forEach((p, i) => out.push([`test.intro[${i}]`, p]));
+
+  exhibit.states.forEach((s) => {
+    out.push([`states.${s.key}.headline`, s.headline]);
+    s.tryThis.forEach((t, i) => out.push([`states.${s.key}.tryThis[${i}]`, t]));
+  });
+
+  for (const excerpt of [...exhibit.excerpts, exhibit.test.excerpt]) {
+    out.push([`excerpt "${excerpt.caption}".caption`, excerpt.caption]);
+    excerpt.lines.forEach((line, i) =>
+      out.push([`excerpt "${excerpt.caption}".lines[${i}]`, line]),
+    );
+    if (excerpt.href) out.push([`excerpt "${excerpt.caption}".href`, excerpt.href]);
+  }
+
+  exhibit.timeline.forEach((entry, i) => {
+    out.push([`timeline[${i}].title`, entry.title]);
+    out.push([`timeline[${i}].detail`, entry.detail]);
+    if (entry.source) {
+      out.push([`timeline[${i}].source.label`, entry.source.label]);
+      out.push([`timeline[${i}].source.href`, entry.source.href]);
+    }
+  });
+
+  exhibit.sources.forEach((source, i) => {
+    out.push([`sources[${i}].label`, source.label]);
+    out.push([`sources[${i}].href`, source.href]);
+    if (source.note) out.push([`sources[${i}].note`, source.note]);
+  });
+
+  return out;
+}
+
+/** Privacy problems in one exhibit. Empty means clean. */
+export function findPrivacyIssues(exhibit: Exhibit): PrivacyIssue[] {
+  return exhibitStrings(exhibit).flatMap(([field, text]) =>
+    findTextPrivacyIssues(text, `${exhibit.slug}.${field}`),
+  );
+}
+
+/* ------------------------------------------------------------
+   Completeness validation
+   ------------------------------------------------------------ */
 
 /**
  * Returns the list of problems with one exhibit. Empty means valid.
@@ -176,14 +385,6 @@ export function validateExhibit(exhibit: Exhibit): string[] {
     at("number must be a positive integer");
   }
   if (!isNonEmptyString(exhibit.title)) at("title is required");
-  /* These two are rendered as plain text — in <title>, in og:description
-     and in a card heading — so markers would leak through verbatim. */
-  for (const [name, value] of [
-    ["title", exhibit.title],
-    ["summary", exhibit.summary],
-  ] as const) {
-    if (/[`]|\*\*/.test(value)) at(`${name} must not contain markup`);
-  }
 
   if (!isNonEmptyString(exhibit.summary)) {
     at("summary is required");
@@ -198,15 +399,27 @@ export function validateExhibit(exhibit: Exhibit): string[] {
     if (exhibit.summary.length > 190) at("summary is too long for a card");
   }
 
+  /* These two are rendered as plain text — in <title>, in og:description
+     and in a card heading — so markers would leak through verbatim. */
+  for (const [name, value] of [
+    ["title", exhibit.title],
+    ["summary", exhibit.summary],
+  ] as const) {
+    if (/[`]|\*\*/.test(value)) at(`${name} must not contain markup`);
+  }
+
   if (!isNonEmptyString(exhibit.evidence)) at("evidence line is required");
   if (!isNonEmptyString(exhibit.simulationNote)) {
     at("simulationNote is required — say what is reproduced, not run");
   }
 
-  if (!GITHUB_SOURCE.test(exhibit.project.href)) {
-    at("project.href must be a github.com/renrenmimi URL");
+  /* --- context --- */
+  if (!CONTEXT_LABELS.includes(exhibit.context.label)) {
+    at(`context.label must be one of the approved labels`);
   }
-  if (!isNonEmptyString(exhibit.project.blurb)) at("project.blurb is required");
+  if (!isNonEmptyString(exhibit.context.description)) {
+    at("context.description is required");
+  }
 
   if (exhibit.categories.length === 0) at("at least one category is required");
   for (const c of exhibit.categories) {
@@ -253,11 +466,11 @@ export function validateExhibit(exhibit: Exhibit): string[] {
   for (const ex of allExcerpts) {
     if (!isNonEmptyString(ex.caption)) at("an excerpt is missing its caption");
     if (ex.lines.length === 0) at(`excerpt "${ex.caption}" is empty`);
-    if (ex.verbatim && !ex.href) {
-      at(`verbatim excerpt "${ex.caption}" must link to its source`);
+    if (ex.origin === "museum-source" && !ex.href) {
+      at(`excerpt "${ex.caption}" is quoted from here and must link to the file`);
     }
-    if (ex.href && !GITHUB_SOURCE.test(ex.href)) {
-      at(`excerpt "${ex.caption}" must link to github.com/renrenmimi`);
+    if (ex.href && !isAllowedHref(ex.href)) {
+      at(`excerpt "${ex.caption}" may only link inside this project`);
     }
     if (ex.kind === "diff") {
       const bad = ex.lines.find((l) => !/^[-+ ]/.test(l) && l.length > 0);
@@ -280,7 +493,7 @@ export function validateExhibit(exhibit: Exhibit): string[] {
 
   /* --- timeline: the whole point of the museum --- */
   const phases = exhibit.timeline.map((t) => t.phase);
-  if (!phases.includes("discovered")) at("timeline needs a discovery");
+  if (!phases.includes("discovered")) at("timeline needs an observation");
   if (!phases.includes("fixed")) at("timeline needs a final fix");
   if (!phases.includes("regression-test")) at("timeline needs a regression test");
   if (hasFirstFix && !phases.includes("attempted")) {
@@ -291,16 +504,21 @@ export function validateExhibit(exhibit: Exhibit): string[] {
     if ((order[i] ?? 0) < (order[i - 1] ?? 0)) at("timeline runs out of order");
   }
 
-  /* --- sources --- */
-  if (exhibit.sources.length < 2) at("at least two source links are required");
+  /* --- sources: only things a visitor can open and check --- */
+  if (exhibit.sources.length < 3) at("at least three source links are required");
   for (const s of exhibit.sources) {
     if (!isNonEmptyString(s.label)) at("a source link is missing its label");
-    if (!GITHUB_SOURCE.test(s.href)) {
-      at(`source "${s.label}" must point at github.com/renrenmimi`);
+    if (!isAllowedHref(s.href)) {
+      at(`source "${s.label}" may only link inside this project`);
     }
   }
-  if (!exhibit.sources.some((s) => s.kind === "commit" || s.kind === "pull-request")) {
-    at("at least one source must be a commit or a pull request");
+  const kinds = new Set(exhibit.sources.map((s) => s.kind));
+  for (const required of [
+    "exhibit-definition",
+    "simulation",
+    "regression-test",
+  ] as const) {
+    if (!kinds.has(required)) at(`sources must include the ${required}`);
   }
 
   return problems;
@@ -312,11 +530,16 @@ export function validateGallery(exhibits: readonly Exhibit[]): string[] {
 
   const slugs = new Set<string>();
   const numbers = new Set<number>();
+  const labels = new Set<string>();
   for (const e of exhibits) {
     if (slugs.has(e.slug)) problems.push(`duplicate slug "${e.slug}"`);
     if (numbers.has(e.number)) problems.push(`duplicate number ${e.number}`);
+    if (labels.has(e.context.label)) {
+      problems.push(`duplicate context label "${e.context.label}"`);
+    }
     slugs.add(e.slug);
     numbers.add(e.number);
+    labels.add(e.context.label);
   }
 
   const featured = exhibits.filter((e) => e.featured);
