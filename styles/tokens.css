@@ -15,7 +15,9 @@
   /* --- ink: warm paper, three weights --- */
   --ink: #ece5d8;
   --ink-2: #b7ad9d;
-  --ink-3: #8d8474;
+  /* Was #8d8474, which measured 4.40:1 against the display-case gradient —
+     under AA for the 11px museum labels it is used for. */
+  --ink-3: #9a9180;
 
   /* --- rules and edges --- */
   --rule: rgba(236, 229, 216, 0.12);
