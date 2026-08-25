@@ -1,0 +1,84 @@
+/* ============================================================
+   Bug Museum — design tokens
+   A small contemporary design museum: warm off-black walls,
+   paper-coloured labels, three state colours and nothing else.
+   ============================================================ */
+
+:root {
+  /* --- surfaces: warm graphite, never blue-black --- */
+  --wall: #14120f;
+  --wall-2: #191713;
+  --plinth: #1e1b16;
+  --case: #232019;
+  --case-2: #2a2620;
+
+  /* --- ink: warm paper, three weights --- */
+  --ink: #ece5d8;
+  --ink-2: #b7ad9d;
+  --ink-3: #8d8474;
+
+  /* --- rules and edges --- */
+  --rule: rgba(236, 229, 216, 0.12);
+  --rule-strong: rgba(236, 229, 216, 0.22);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.32);
+
+  /* --- the three states. Restrained: these are labels, not alarms. --- */
+  --broken: #e2695a;
+  --broken-dim: rgba(226, 105, 90, 0.14);
+  --broken-edge: rgba(226, 105, 90, 0.42);
+
+  --first: #d9a038;
+  --first-dim: rgba(217, 160, 56, 0.14);
+  --first-edge: rgba(217, 160, 56, 0.42);
+
+  --fixed: #5cbfa0;
+  --fixed-dim: rgba(92, 191, 160, 0.14);
+  --fixed-edge: rgba(92, 191, 160, 0.42);
+
+  --accent: #cbb896;
+
+  /* --- type --- */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Eight steps, and no ninth. */
+  --t-1: 0.6875rem;
+  --t-2: 0.75rem;
+  --t-3: 0.8125rem;
+  --t-4: 0.9375rem;
+  --t-5: 1.0625rem;
+  --t-6: 1.375rem;
+  --t-7: 1.875rem;
+  --t-8: 2.625rem;
+
+  /* --- spacing --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+  --s-9: 104px;
+
+  --radius: 3px;
+  --radius-lg: 6px;
+
+  --page: 1120px;
+  --measure: 68ch;
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 180ms;
+}
+
+/* One place decides whether anything moves. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 1ms;
+  }
+}
