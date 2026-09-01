@@ -10,6 +10,14 @@ simulation.
 
 Live: <https://bugmuseum.vercel.app>
 
+![The gallery — a featured exhibit you can put into any of its three states](docs/gallery.jpg)
+
+*The gallery. Every exhibit is an object you can handle: switch it between broken, first fix and fixed, and watch the state readouts change with it.*
+
+![An exhibit — the broken behaviour, the fix, and the test that holds it](docs/exhibit.jpg)
+
+*Inside an exhibit — reproduce the defect, step through what the fix changes, and read why the first attempt was not the end of it.*
+
 ## Why it exists
 
 The fix for a bug is easy to show. The reasoning is not, and the reasoning is
