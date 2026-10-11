@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CATEGORY_LABELS } from "@/content/schema";
 import { exhibits, getExhibit, neighbours } from "@/content/exhibits";
 import { ExhibitStage } from "@/components/museum/exhibit-stage";
+import { toStage } from "@/components/museum/exhibit-props";
 import { CodeExcerptBlock } from "@/components/museum/code-excerpt";
 import { Timeline } from "@/components/museum/timeline";
 import { SourceList } from "@/components/museum/source-list";
@@ -97,7 +98,7 @@ export default async function ExhibitPage({
           <p className="label">The object</p>
           <h2 id="demo-heading">See it happen</h2>
         </div>
-        <ExhibitStage exhibit={exhibit} />
+        <ExhibitStage exhibit={toStage(exhibit)} />
       </section>
 
       <section className={s.section} aria-labelledby="story-heading">

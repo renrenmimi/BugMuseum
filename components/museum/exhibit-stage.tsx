@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Exhibit, StateKey } from "@/content/schema";
+import type { StateKey } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import { SIM_REGISTRY } from "@/components/sims/registry";
 import { DisplayCase } from "./display-case";
+import type { StageExhibit } from "./exhibit-props";
 import { RichText } from "./rich-text";
 import s from "./exhibit-stage.module.css";
 
@@ -35,7 +36,7 @@ export function ExhibitStage({
   exhibit,
   syncHash = true,
 }: {
-  exhibit: Exhibit;
+  exhibit: StageExhibit;
   /** The gallery entrance shows a case too, and should not own the URL. */
   syncHash?: boolean;
 }) {
@@ -46,13 +47,20 @@ export function ExhibitStage({
 
   /* The hash is read after mount: rendering from it would disagree with the
      server-rendered HTML, and a hydration warning is a bug in a museum
-     about bugs. */
+     about bugs. It is read again whenever it changes, so a fragment edited
+     in the address bar, or reached by an in-page link, switches the state. */
+  const keyList = keys.join(" ");
   useEffect(() => {
     if (!syncHash) return;
-    const fromHash = readHash(keys);
-    if (fromHash) setActive(fromHash);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncHash]);
+    const valid = keyList.split(" ") as StateKey[];
+    const follow = () => {
+      const fromHash = readHash(valid);
+      if (fromHash) setActive(fromHash);
+    };
+    follow();
+    window.addEventListener("hashchange", follow);
+    return () => window.removeEventListener("hashchange", follow);
+  }, [syncHash, keyList]);
 
   const select = useCallback(
     (key: StateKey) => {
