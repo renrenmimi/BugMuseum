@@ -18,7 +18,7 @@ const ACCOUNT_LABEL: Record<ServerState["userDoc"], string> = {
 
 const DOC_LABEL: Record<ServerState["userDoc"], string> = {
   live: "live",
-  pending: "deletionPending",
+  pending: "pendingDeletion",
   deleted: "deleted",
   recreated: "recreated ⚠",
 };
@@ -148,7 +148,7 @@ export function TabsSim({ state }: { state: StateKey }) {
         <div className={cx(s.pane, frame.actor === "Server" && s.paneActive)}>
           <p className={s.paneHead}>
             <span>Server</span>
-            <span>Firestore</span>
+            <span>database</span>
           </p>
           <ul className={s.rows}>
             <li className={s.row}>

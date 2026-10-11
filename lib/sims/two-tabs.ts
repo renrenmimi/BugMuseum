@@ -135,12 +135,12 @@ const BROKEN = build([
   },
   {
     actor: "Server",
-    event: "ensureUserProfile recreates the account",
+    event: "the repair endpoint recreates the account",
     detail:
-      "The endpoint does exactly what it was asked to: the user document and the username reservation are back.",
+      "The endpoint does exactly what it was asked to: the user document and the username reservation are back, with a generated display name.",
     tone: "broken",
     server: { userDoc: "recreated", usernameReservation: true },
-    tabB: { profile: "mochi" },
+    tabB: { profile: "user-4821" },
   },
   {
     actor: "Tab A",
@@ -148,7 +148,7 @@ const BROKEN = build([
     detail:
       "Both tabs are still signed in to an account that the backend deleted and the frontend rebuilt.",
     tone: "broken",
-    tabA: { profile: "mochi" },
+    tabA: { profile: "user-4821" },
   },
 ]);
 
@@ -164,7 +164,7 @@ const FIRST_FIX = build([
   },
   {
     actor: "Server",
-    event: "deletionPending: true, and the profile is blanked",
+    event: "pendingDeletion: true, and the profile is blanked",
     detail:
       "The intent reaches every listening tab through the snapshot stream they are already subscribed to.",
     server: { userDoc: "pending" },
@@ -175,7 +175,7 @@ const FIRST_FIX = build([
     actor: "Tab B",
     event: "snapshot: displayName is empty",
     detail:
-      "The first fix only guards the !exists() branch, so the blanked-field path still fires a repair — the server refuses it, but the tab tried.",
+      "The first fix notes pendingDeletion but still runs the repair check, so the blanked display name fires a repair — the server refuses it, but the tab tried.",
     tone: "first",
     tabB: { repairCalls: 1 },
   },
@@ -184,6 +184,13 @@ const FIRST_FIX = build([
     event: "users/{uid} deleted",
     detail: "The document and the username reservation are removed for good.",
     server: { userDoc: "deleted", usernameReservation: false },
+  },
+  {
+    actor: "Tab A",
+    event: "signed out by the deletion flow",
+    detail:
+      "The tab that clicked Delete signs out through the normal path, which clears its caches.",
+    tabA: OUT,
   },
   {
     actor: "Tab B",
@@ -214,7 +221,7 @@ const FIXED = build([
   },
   {
     actor: "Server",
-    event: "deletionPending: true, and the profile is blanked",
+    event: "pendingDeletion: true, and the profile is blanked",
     detail: "Same cascade, same order.",
     server: { userDoc: "pending" },
     tabA: { profile: "" },
@@ -222,7 +229,7 @@ const FIXED = build([
   },
   {
     actor: "Tab B",
-    event: "deletionPending seen — return early",
+    event: "pendingDeletion seen — return early",
     detail:
       "The listener records the intent and returns before any repair check runs, so the blanked display name never triggers a call.",
     tone: "fixed",
