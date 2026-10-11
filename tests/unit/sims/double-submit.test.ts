@@ -126,3 +126,136 @@ describe("with the mutex", () => {
     expect(runner.state().feedback.kind).toBe("wrong");
   });
 });
+
+describe("what each entry point reports", () => {
+  it("says an empty box was empty, not that it was blocked", () => {
+    for (const version of ["broken", "fixed"] as const) {
+      const { runner, pending } = setup(version);
+      expect(runner.submit()).toBe("empty");
+      expect(pending()).toBe(0);
+    }
+  });
+
+  it("separates a wrong answer, a scheduled advance and a blocked one", () => {
+    const { runner } = setup("fixed");
+    runner.type("nonsense");
+    expect(runner.submit()).toBe("wrong");
+
+    answer(runner);
+    expect(runner.submit()).toBe("scheduled");
+    expect(runner.submit()).toBe("blocked");
+    expect(runner.reveal()).toBe("blocked");
+  });
+
+  it("lets Reveal queue a second advance without the mutex", () => {
+    const { runner, pending } = setup("broken");
+    answer(runner);
+    expect(runner.submit()).toBe("scheduled");
+    expect(runner.reveal()).toBe("scheduled");
+    expect(pending()).toBe(2);
+  });
+});
+
+describe("past the last blank", () => {
+  it("stops at the end however many advances were queued", () => {
+    const { runner, flush } = setup("broken");
+    answer(runner);
+    for (let i = 0; i < 4; i += 1) runner.submit();
+    flush();
+
+    expect(runner.state().solved).toBe(BLANKS.length);
+    expect(runner.state().skipped).toEqual([1, 2]);
+  });
+
+  it("does not report a skip when the last blank was answered", () => {
+    const { runner, flush } = setup("broken");
+    for (let i = 0; i < BLANKS.length - 1; i += 1) {
+      answer(runner);
+      runner.submit();
+      flush();
+    }
+    answer(runner);
+    for (let i = 0; i < 4; i += 1) runner.submit();
+    flush();
+
+    expect(runner.state().solved).toBe(BLANKS.length);
+    expect(runner.state().skipped).toEqual([]);
+  });
+});
+
+describe("a restart without the mutex", () => {
+  it("cannot cancel what it never kept: every queued advance still fires", () => {
+    const { runner, pending } = setup("broken");
+    answer(runner);
+    runner.submit();
+    runner.submit();
+
+    expect(runner.restart()).toEqual({ cancelled: 0, stillPending: 2 });
+    expect(pending()).toBe(2);
+    expect(runner.state().pending).toBe(2);
+  });
+
+  it("says which advances came from before the restart", () => {
+    const { runner, flush } = setup("broken");
+    const fired: { left: number | null; skipped: boolean; stale: boolean }[] = [];
+    runner.onAdvance((info) => fired.push(info));
+    answer(runner);
+    runner.submit();
+    runner.submit();
+    runner.restart();
+    flush();
+
+    expect(fired).toEqual([
+      { left: 0, skipped: true, stale: true },
+      { left: 1, skipped: true, stale: true },
+    ]);
+    expect(runner.state().solved).toBe(2);
+  });
+
+  it("does not count a single Enter afterwards as a skip", () => {
+    const { runner, flush } = setup("broken");
+    answer(runner);
+    runner.submit();
+    runner.submit();
+    runner.restart();
+    flush();
+
+    const skippedByStaleTimers = runner.state().skipped;
+    answer(runner);
+    runner.submit();
+    flush();
+
+    expect(runner.state().solved).toBe(BLANKS.length);
+    expect(runner.state().skipped).toEqual(skippedByStaleTimers);
+    expect(runner.state().seen).toContain(2);
+  });
+
+  it("leaves its timers running after unmount, but tells nobody", () => {
+    const { runner, pending, flush } = setup("broken");
+    let calls = 0;
+    runner.onChange(() => {
+      calls += 1;
+    });
+    answer(runner);
+    runner.submit();
+    runner.submit();
+    calls = 0;
+    runner.unmount();
+
+    expect(pending()).toBe(2);
+    flush();
+    expect(calls).toBe(0);
+  });
+});
+
+describe("a restart with the mutex", () => {
+  it("cancels the one pending advance and says so", () => {
+    const { runner, pending } = setup("fixed");
+    answer(runner);
+    runner.submit();
+
+    expect(runner.restart()).toEqual({ cancelled: 1, stillPending: 0 });
+    expect(pending()).toBe(0);
+    expect(runner.state().pending).toBe(0);
+  });
+});

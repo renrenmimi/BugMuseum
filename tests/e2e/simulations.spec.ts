@@ -153,7 +153,7 @@ test.describe("exhibit 06 — the double submit", () => {
   test("typing and pressing Enter works like a real form", async ({ page }) => {
     await page.goto("/exhibits/double-submit-skipped-blank#fixed");
     const input = page.getByLabel("Your answer");
-    await input.fill("messages");
+    await input.fill("let");
     await input.press("Enter");
 
     await expect(page.getByTestId("blank-prompt")).toContainText("Blank 2 of 3");
@@ -167,6 +167,59 @@ test.describe("exhibit 06 — the double submit", () => {
 
     await expect(page.getByText("Not quite — try again.")).toBeVisible();
     await expect(page.getByTestId("blank-prompt")).toContainText("Blank 1 of 3");
+  });
+
+  test("an empty submit is reported as empty, not as blocked", async ({ page }) => {
+    await page.goto("/exhibits/double-submit-skipped-blank#broken");
+    await page.getByTestId("double-enter").click();
+
+    const log = page.getByRole("list", { name: /event log/i });
+    await expect(log).toContainText("nothing typed");
+    await expect(log).not.toContainText("already pending");
+  });
+
+  test("pressing the double-Enter button twice skips two blanks, not three", async ({
+    page,
+  }) => {
+    await page.goto("/exhibits/double-submit-skipped-blank#broken");
+    await page.getByRole("button", { name: "Fill the answer" }).click();
+    await page.getByTestId("double-enter").dblclick();
+
+    await expect(page.getByTestId("blank-prompt")).toContainText(
+      "2 of 3 blanks went by",
+    );
+  });
+
+  test("a broken restart shows the timers it cannot cancel", async ({ page }) => {
+    await page.goto("/exhibits/double-submit-skipped-blank#broken");
+    await page.getByRole("button", { name: "Fill the answer" }).click();
+    await page.getByTestId("double-enter").click();
+    await page.getByRole("button", { name: "Restart" }).click();
+
+    const log = page.getByRole("list", { name: /event log/i });
+    await expect(log).toContainText("2 queued advances are still running");
+    await expect(page.getByTestId("blank-prompt")).toContainText("Blank 3 of 3");
+    await expect(log).toContainText("queued before the restart");
+
+    // One Enter on the blank that is actually on screen is not a skip.
+    await page.getByRole("button", { name: "Fill the answer" }).click();
+    await page.getByLabel("Your answer").press("Enter");
+    await expect(page.getByTestId("blank-prompt")).toContainText(
+      "2 of 3 blanks went by",
+    );
+  });
+
+  test("Reveal is blocked inside the window once fixed", async ({ page }) => {
+    await page.goto("/exhibits/double-submit-skipped-blank#fixed");
+    await page.getByRole("button", { name: "Fill the answer" }).click();
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByRole("button", { name: "Reveal" }).click();
+
+    await expect(page.getByRole("list", { name: /event log/i })).toContainText(
+      "reveal ignored",
+    );
+    await expect(page.getByTestId("blank-prompt")).toContainText("Blank 2 of 3");
+    await expect(page.getByText("skipped", { exact: true })).toHaveCount(0);
   });
 });
 
