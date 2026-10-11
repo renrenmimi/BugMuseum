@@ -218,6 +218,12 @@
   .scrim {
     animation: none;
   }
+
+  /* The browser would otherwise still glide the restore. With the rule off,
+     scrollTo jumps and the simulation replays the journey in four steps. */
+  .viewport {
+    scroll-behavior: auto;
+  }
 }
 
 .drawerHead {

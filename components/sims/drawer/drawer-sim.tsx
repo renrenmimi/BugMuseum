@@ -102,10 +102,14 @@ export function DrawerSim({ state }: { state: StateKey }) {
   const docRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const scrimRef = useRef<HTMLButtonElement>(null);
+  /* Whatever had focus when the drawer opened gets it back when it closes. */
+  const openerRef = useRef<HTMLElement | null>(null);
+  const navigatedRef = useRef(false);
+  const wasOpen = useRef(false);
 
   /* Exactly one place sets this to true: the moment the lock goes on. */
   const restoreScroll = useRef(true);
-  const lockedAt = useRef(0);
   const tweenRef = useRef<(() => void) | null>(null);
 
   const [open, setOpen] = useState(false);
@@ -113,6 +117,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
   const [scrollTop, setScrollTop] = useState(0);
   const [locked, setLocked] = useState(false);
   const [frames, setFrames] = useState<number[] | null>(null);
+  const [lockedAt, setLockedAt] = useState(0);
   const { entries, push, clear } = useEventLog(40);
 
   const tone = MODE_TONE[mode];
@@ -153,7 +158,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
 
     restoreScroll.current = true;
     const y = Math.round(vp.scrollTop);
-    lockedAt.current = y;
+    setLockedAt(y);
     const before = {
       position: doc.style.position,
       top: doc.style.top,
@@ -194,14 +199,22 @@ export function DrawerSim({ state }: { state: StateKey }) {
 
       vp.scrollTo(0, y);
       /* If the browser honoured scroll-behavior: smooth, that call has
-         already become an animation and we are done. Headless browsers and
-         reduced-motion settings turn it into a jump — drive the same
-         journey by hand there, or the exhibit shows nothing. */
+         already become an animation and we are done. Headless browsers turn
+         it into a jump, and so does the stylesheet under reduced motion —
+         drive the same journey by hand there, in steps when motion is
+         reduced, or the exhibit shows nothing. */
+      const stepped = prefersReducedMotion();
       if (Math.round(vp.scrollTop) === y && y > 0) {
         vp.scrollTop = 0;
-        tweenRef.current = animateRestore(vp, y, prefersReducedMotion());
+        tweenRef.current = animateRestore(vp, y, stepped);
       }
-      push("restore", `scrollTo(0, ${y}) — inherits scroll-behavior: smooth`, tone);
+      push(
+        "restore",
+        `scrollTo(0, ${y}) — governed by scroll-behavior: smooth${
+          stepped && y > 0 ? ", shown in four steps because motion is reduced" : ""
+        }`,
+        tone,
+      );
     };
   }, [open, mode, push, tone]);
 
@@ -238,12 +251,18 @@ export function DrawerSim({ state }: { state: StateKey }) {
   const openDrawer = useCallback(() => {
     tweenRef.current?.();
     tweenRef.current = null;
+    const active = document.activeElement;
+    openerRef.current =
+      active instanceof HTMLElement && active !== document.body ? active : burgerRef.current;
     setFrames(null);
     setOpen(true);
     push("open", "drawer opened", tone);
   }, [push, tone]);
 
-  /* --- Escape, and focus back on the hamburger --------------------- */
+  /* A stray restore animation must not outlive the case. */
+  useEffect(() => () => tweenRef.current?.(), []);
+
+  /* --- Escape --------------------------------------------------------- */
   useEffect(() => {
     if (!open) return;
     const panel = drawerRef.current;
@@ -253,9 +272,6 @@ export function DrawerSim({ state }: { state: StateKey }) {
       if (e.key !== "Escape") return;
       e.preventDefault();
       closeDrawer("Escape");
-      /* preventScroll for the same reason the restore is instant: focus()
-         otherwise scrolls the button into view, smoothly. */
-      burgerRef.current?.focus({ preventScroll: true });
     };
 
     /* Document level, not panel level: Escape has to work from the controls
@@ -263,6 +279,33 @@ export function DrawerSim({ state }: { state: StateKey }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, closeDrawer]);
+
+  /* --- focus back where it came from, however the drawer closed ----- */
+  useEffect(() => {
+    if (open) {
+      wasOpen.current = true;
+      return;
+    }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+
+    const navigated = navigatedRef.current;
+    navigatedRef.current = false;
+    /* If the control that closed it is still there and usable (the
+       hamburger, the button beside the case), focus is already right. It
+       is lost when it was inside the drawer, on the scrim, or on a control
+       that closing has just disabled. */
+    const active = document.activeElement as HTMLButtonElement | null;
+    const lost = !active || active === document.body || active.disabled === true;
+    if (!lost && !navigated) return;
+
+    /* A new page starts at the top, so its first control gets focus;
+       otherwise whatever opened the drawer does. preventScroll for the same
+       reason the restore is instant: focus() otherwise scrolls the target
+       into view, smoothly. */
+    const target = navigated ? burgerRef.current : (openerRef.current ?? burgerRef.current);
+    target?.focus({ preventScroll: true });
+  }, [open]);
 
   /* --- the scrim stops clicks, not scrolling ----------------------- */
   useEffect(() => {
@@ -293,7 +336,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
       lastY = y;
     };
 
-    const scrim = document.getElementById("drawer-sim-scrim");
+    const scrim = scrimRef.current;
     if (!scrim) return;
     scrim.addEventListener("wheel", onWheel, { passive: false });
     scrim.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -310,9 +353,12 @@ export function DrawerSim({ state }: { state: StateKey }) {
     const vp = viewportRef.current;
     if (!vp) return;
     const before = Math.round(vp.scrollTop);
+    /* Push towards whichever end has room, so that "did not move" can only
+       mean the page is locked, never that it was already at the bottom. */
+    const room = vp.scrollHeight - vp.clientHeight - vp.scrollTop;
     const prev = vp.style.scrollBehavior;
     vp.style.scrollBehavior = "auto";
-    vp.scrollTop = before + 160;
+    vp.scrollTop = before + (room >= 160 ? 160 : -160);
     vp.style.scrollBehavior = prev;
     const after = Math.round(vp.scrollTop);
     push(
@@ -327,6 +373,10 @@ export function DrawerSim({ state }: { state: StateKey }) {
   const scrollToMiddle = () => {
     const vp = viewportRef.current;
     if (!vp) return;
+    if (locked) {
+      push("visitor", "tried to jump to the middle — the page is locked, nothing to scroll", tone);
+      return;
+    }
     tweenRef.current?.();
     tweenRef.current = null;
     const prev = vp.style.scrollBehavior;
@@ -340,6 +390,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
   const navigate = (to: (typeof PAGES)[number]) => {
     /* A new page starts at the top: mark "do not restore" before closing. */
     restoreScroll.current = false;
+    navigatedRef.current = true;
     setPage(to);
     setOpen(false);
     setFrames(null);
@@ -356,7 +407,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
     }
   };
 
-  const target = lockedAt.current;
+  const target = lockedAt;
   const restored = frames !== null && frames[1] === target;
 
   return (
@@ -406,7 +457,8 @@ export function DrawerSim({ state }: { state: StateKey }) {
               <>
                 <button
                   type="button"
-                  id="drawer-sim-scrim"
+                  ref={scrimRef}
+                  data-testid="drawer-scrim"
                   className={s.scrim}
                   aria-label="Close navigation"
                   onClick={() => closeDrawer("the scrim")}
@@ -415,7 +467,6 @@ export function DrawerSim({ state }: { state: StateKey }) {
                   className={s.drawer}
                   ref={drawerRef}
                   role="dialog"
-                  aria-modal="true"
                   aria-label="Navigation"
                   tabIndex={-1}
                 >
