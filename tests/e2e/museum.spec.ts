@@ -156,6 +156,25 @@ test.describe("the featured exhibit", () => {
   });
 });
 
+test.describe("the site navigation", () => {
+  test("marks the gallery as the page on /, and as the section on an exhibit", async ({
+    page,
+  }) => {
+    const gallery = page
+      .getByRole("navigation", { name: "Museum" })
+      .getByRole("link", { name: "Gallery" });
+
+    await page.goto("/");
+    await expect(gallery).toHaveAttribute("aria-current", "page");
+
+    await page.goto("/exhibits/local-day-boundary");
+    await expect(gallery).toHaveAttribute("aria-current", "true");
+    // Still underlined as the section you are in.
+    const shadow = await gallery.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(shadow).not.toBe("none");
+  });
+});
+
 test.describe("moving through the gallery", () => {
   test("walks the whole collection with next, then back with previous", async ({
     page,

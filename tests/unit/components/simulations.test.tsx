@@ -62,10 +62,10 @@ describe("the day-boundary case", () => {
     );
   });
 
-  it("still rotates the drill mid-afternoon in the first fix", () => {
+  it("still rotates the drill in the late afternoon in the first fix", () => {
     render(<DaySim state="first-fix" />);
     expect(screen.getByTestId("drill-verdict")).toHaveTextContent(
-      /mid-afternoon/,
+      /in the late afternoon/,
     );
   });
 

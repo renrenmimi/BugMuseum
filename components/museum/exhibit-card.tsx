@@ -29,6 +29,7 @@ export function ExhibitCard({ exhibit }: { exhibit: CardExhibit }) {
       <div className={s.cardFoot}>
         <span
           className={s.tagStates}
+          role="img"
           aria-label={`${exhibit.states.length} states: ${exhibit.states
             .map((st) => st.label)
             .join(", ")}`}

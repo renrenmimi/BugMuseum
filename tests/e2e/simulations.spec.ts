@@ -37,13 +37,13 @@ test.describe("exhibit 03 — the day boundary", () => {
   test("switching state changes both halves of the case", async ({ page }) => {
     await page.goto("/exhibits/local-day-boundary#broken");
     await expect(page.getByTestId("walk-verdict")).toContainText("2026-03-08");
-    await expect(page.getByTestId("drill-verdict")).toContainText("mid-afternoon");
+    await expect(page.getByTestId("drill-verdict")).toContainText("in the late afternoon");
 
     await page.getByRole("radio", { name: /First fix/ }).click();
     await expect(page.getByTestId("walk-verdict")).toContainText(
       "visited exactly once",
     );
-    await expect(page.getByTestId("drill-verdict")).toContainText("mid-afternoon");
+    await expect(page.getByTestId("drill-verdict")).toContainText("in the late afternoon");
 
     await page.getByRole("radio", { name: /^Fixed$/ }).click();
     await expect(page.getByTestId("walk-verdict")).toContainText(

@@ -169,21 +169,6 @@
   max-width: 62ch;
 }
 
-.panels {
-  display: grid;
-  gap: var(--s-4);
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 800px) {
-  .panelsTwo {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .panelsThree {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 .panel {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
