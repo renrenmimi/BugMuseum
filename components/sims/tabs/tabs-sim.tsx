@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { StateKey } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import type { ServerState, TabState } from "@/lib/sims/two-tabs";
@@ -75,15 +75,23 @@ function TabPane({
 export function TabsSim({ state }: { state: StateKey }) {
   const script = TAB_SCRIPTS[state];
   const [step, setStep] = useState(0);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    setStep(0);
-  }, [state]);
+  const atStart = step === 0;
+  const atEnd = step >= script.length - 1;
+
+  /* A button that has just been disabled loses focus to the document body.
+     Hand it on first: Reset at the last step, Next step back at the first. */
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    if (atEnd && active === nextRef.current) resetRef.current?.focus();
+    if (atStart && active === backRef.current) nextRef.current?.focus();
+  }, [atStart, atEnd]);
 
   const frame = script[Math.min(step, script.length - 1)];
   if (!frame) return null;
-
-  const atEnd = step >= script.length - 1;
 
   return (
     <div className={sim.sim}>
@@ -91,20 +99,22 @@ export function TabsSim({ state }: { state: StateKey }) {
         <button
           type="button"
           className={sim.btn}
+          ref={backRef}
           onClick={() => setStep((n) => Math.max(0, n - 1))}
-          disabled={step === 0}
+          disabled={atStart}
         >
           Back
         </button>
         <button
           type="button"
           className={cx(sim.btn, !atEnd && sim.btnPrimary)}
+          ref={nextRef}
           onClick={() => setStep((n) => Math.min(script.length - 1, n + 1))}
           disabled={atEnd}
         >
           Next step
         </button>
-        <button type="button" className={sim.btn} onClick={() => setStep(0)}>
+        <button type="button" className={sim.btn} ref={resetRef} onClick={() => setStep(0)}>
           Reset
         </button>
         <span className={sim.hint}>
@@ -126,6 +136,7 @@ export function TabsSim({ state }: { state: StateKey }) {
           frame.tone === "fixed" && s.nowFixed,
         )}
         data-testid="tabs-frame"
+        aria-live="polite"
       >
         <p className={s.nowActor}>{frame.actor}</p>
         <p className={s.nowEvent}>{frame.event}</p>
