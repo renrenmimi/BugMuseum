@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { CodeExcerpt } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import s from "./museum.module.css";
@@ -13,6 +14,12 @@ function lineClass(kind: CodeExcerpt["kind"], line: string): string {
     return cx(s.codeLine, s.codeComment);
   }
   return cx(s.codeLine);
+}
+
+/** How far in a line's code starts, so a wrapped line can hang under itself. */
+function indentOf(kind: CodeExcerpt["kind"], line: string): CSSProperties {
+  const lead = (kind === "diff" ? /^[-+ ]?\s*/ : /^\s*/).exec(line)?.[0].length ?? 0;
+  return { "--indent": `${lead}ch` } as CSSProperties;
 }
 
 /**
@@ -41,7 +48,11 @@ export function CodeExcerptBlock({ excerpt }: { excerpt: CodeExcerpt }) {
       <pre className={s.codePre}>
         <code>
           {excerpt.lines.map((line, i) => (
-            <span key={i} className={lineClass(excerpt.kind, line)}>
+            <span
+              key={i}
+              className={lineClass(excerpt.kind, line)}
+              style={indentOf(excerpt.kind, line)}
+            >
               {line === "" ? " " : line}
               {"\n"}
             </span>
