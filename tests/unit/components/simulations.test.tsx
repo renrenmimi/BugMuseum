@@ -6,6 +6,8 @@ import { DaySim } from "@/components/sims/day/day-sim";
 import { RecogniserSim } from "@/components/sims/recogniser/recogniser-sim";
 import { TabsSim } from "@/components/sims/tabs/tabs-sim";
 import { BlanksSim } from "@/components/sims/blanks/blanks-sim";
+import { SIM_REGISTRY } from "@/components/sims/registry";
+import { SIMULATIONS } from "@/content/schema";
 
 describe("the circuit breaker case", () => {
   it("strands itself after a pre-flight in the broken state", async () => {
@@ -235,4 +237,16 @@ describe("the fill-in-the-blank case, reported honestly", () => {
       expect(screen.getByRole("button", { name: "Restart" })).toHaveFocus(),
     );
   });
+});
+
+describe("the registry", () => {
+  /* Each simulation is loaded on demand. Check every entry resolves to the
+     real component rather than to an empty placeholder. */
+  for (const id of SIMULATIONS) {
+    it(`loads and renders ${id}`, async () => {
+      const Simulation = SIM_REGISTRY[id];
+      const { container } = render(<Simulation state="broken" />);
+      await waitFor(() => expect(container.querySelector("button")).not.toBeNull());
+    });
+  }
 });
