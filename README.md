@@ -310,6 +310,7 @@ change: 200 is right, 302 means the origin is not a production domain.
 
 No analytics, no cookies, no tracking.
 
-## Licence
+---
 
-MIT. The bugs are mine; you are welcome to them.
+© 2026 Weiren Feng. All rights reserved. Published for reading and portfolio purposes; not
+licensed for reuse, modification, or redistribution.
