@@ -9,24 +9,54 @@ import { cx } from "@/lib/cx";
 import sim from "../sim.module.css";
 import s from "./drawer.module.css";
 
-/* The page inside the phone. Long enough that "somewhere in the middle" is a
-   real place, short enough that it does not cost anything to render. */
-const SECTIONS = [
-  "Two pointers, and when they are a lie",
-  "Sliding window: the shape of the invariant",
-  "Prefix sums you can actually explain",
-  "Binary search on the answer",
-  "Monotonic stacks in one sitting",
-  "Union find without the folklore",
-  "Topological order, and cycles",
-  "Dijkstra when the weights misbehave",
-  "Intervals: merge, sweep, count",
-  "Bitmask DP, honestly",
-  "Tries and the cost of a character",
-  "Backtracking with a budget",
-];
-
 const PAGES = ["Arrays", "Graphs", "Dynamic programming"] as const;
+
+/* The pages inside the phone. Long enough that "somewhere in the middle" is a
+   real place, short enough that they do not cost anything to render. */
+const SECTIONS: Record<(typeof PAGES)[number], readonly string[]> = {
+  Arrays: [
+    "Two pointers, and when they are a lie",
+    "Sliding window: the shape of the invariant",
+    "Prefix sums you can actually explain",
+    "Binary search on the answer",
+    "Monotonic stacks in one sitting",
+    "Intervals: merge, sweep, count",
+    "Kadane, and why it works",
+    "Partitioning around a pivot",
+    "Cyclic sort for missing numbers",
+    "Difference arrays for range updates",
+    "Rotating in place without extra space",
+    "Walking a matrix in a spiral",
+  ],
+  Graphs: [
+    "Union find without the folklore",
+    "Topological order, and cycles",
+    "Dijkstra when the weights misbehave",
+    "Breadth-first search, level by level",
+    "Depth-first search and its stack",
+    "Bipartite checks with two colours",
+    "Minimum spanning trees, two ways",
+    "Negative edges and Bellman–Ford",
+    "Strongly connected components",
+    "Shortest paths on a grid",
+    "Bridges and articulation points",
+    "The graph hiding in a word puzzle",
+  ],
+  "Dynamic programming": [
+    "Bitmask DP, honestly",
+    "From backtracking to memoisation",
+    "Knapsack, the whole family",
+    "Longest common subsequence by hand",
+    "Edit distance in a table",
+    "Coin change, counted two ways",
+    "Intervals as subproblems",
+    "Digit DP, one place at a time",
+    "DP on trees",
+    "State machines for buy-and-sell problems",
+    "Partitioning into equal sums",
+    "Memoisation or tabulation?",
+  ],
+};
 
 type Mode = StateKey;
 
@@ -357,7 +387,7 @@ export function DrawerSim({ state }: { state: StateKey }) {
                   </div>
 
                   <div className={s.docBody}>
-                    {SECTIONS.map((title, i) => (
+                    {SECTIONS[page].map((title, i) => (
                       <div className={s.block} key={title}>
                         <p className={s.blockNum}>
                           {page} · {String(i + 1).padStart(2, "0")}

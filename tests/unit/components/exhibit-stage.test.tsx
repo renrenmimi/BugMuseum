@@ -28,7 +28,7 @@ describe("the state selector", () => {
 
     await user.click(screen.getByRole("radio", { name: /first fix/i }));
     expect(screen.getByTestId("state-headline")).toHaveTextContent(
-      "closing takes a slow ride back",
+      "closing scrolls the page slowly back",
     );
 
     await user.click(screen.getByRole("radio", { name: /^fixed$/i }));
