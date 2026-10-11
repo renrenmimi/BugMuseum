@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BreakerSim } from "@/components/sims/breaker/breaker-sim";
 import { DaySim } from "@/components/sims/day/day-sim";
@@ -160,5 +160,79 @@ describe("the fill-in-the-blank case", () => {
 
     await screen.findByText(/Blank 2 of 3/, {}, { timeout: 3000 });
     expect(screen.queryByText("skipped")).not.toBeInTheDocument();
+  });
+});
+
+describe("the fill-in-the-blank case, reported honestly", () => {
+  const log = () => screen.getByRole("list", { name: /event log/i });
+
+  it("calls an empty submit empty in both states, not blocked", async () => {
+    for (const state of ["broken", "fixed"] as const) {
+      const user = userEvent.setup();
+      const { unmount } = render(<BlanksSim state={state} />);
+
+      await user.click(screen.getByRole("button", { name: "Submit" }));
+      expect(within(log()).getByText(/nothing typed/)).toBeInTheDocument();
+      expect(within(log()).queryByText(/already pending/)).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("has the Reveal control the label asks for, and the mutex blocks it", async () => {
+    const user = userEvent.setup();
+    render(<BlanksSim state="fixed" />);
+
+    await user.click(screen.getByRole("button", { name: "Fill the answer" }));
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Reveal" }));
+
+    expect(within(log()).getByText(/reveal ignored/)).toBeInTheDocument();
+    expect(screen.getByTestId("timer-queue")).toHaveTextContent(/^advance \+700ms/);
+  });
+
+  it("shows the timers a broken restart cannot cancel, and blames them", async () => {
+    const user = userEvent.setup();
+    render(<BlanksSim state="broken" />);
+
+    await user.click(screen.getByRole("button", { name: "Fill the answer" }));
+    await user.click(screen.getByTestId("double-enter"));
+    await user.click(screen.getByRole("button", { name: "Restart" }));
+
+    expect(within(log()).getByText(/2 queued advances are still running/)).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByTestId("blank-prompt")).toHaveTextContent("Blank 3 of 3"),
+      { timeout: 3000 },
+    );
+    expect(within(log()).getAllByText(/queued before the restart/)).toHaveLength(2);
+  });
+
+  it("counts only the blanks that really went by when Enter is pressed four times", async () => {
+    const user = userEvent.setup();
+    render(<BlanksSim state="broken" />);
+
+    await user.click(screen.getByRole("button", { name: "Fill the answer" }));
+    await user.dblClick(screen.getByTestId("double-enter"));
+
+    await waitFor(
+      () => expect(screen.getByTestId("blank-prompt")).toHaveTextContent(/Finished/),
+      { timeout: 3000 },
+    );
+    expect(screen.getByTestId("blank-prompt")).toHaveTextContent(/2 of 3 blanks/);
+  });
+
+  it("hands focus to Restart when the last answer closes the form", async () => {
+    const user = userEvent.setup();
+    render(<BlanksSim state="fixed" />);
+    const input = screen.getByLabelText("Your answer");
+
+    for (const answer of ["let", "of", "return"]) {
+      await user.click(input);
+      await user.keyboard(`${answer}{Enter}`);
+      await waitFor(() => expect(input).toHaveValue(""), { timeout: 3000 });
+    }
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Restart" })).toHaveFocus(),
+    );
   });
 });
