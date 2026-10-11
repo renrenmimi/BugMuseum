@@ -53,6 +53,50 @@ describe("RichText", () => {
   it("strips markers for plain contexts", () => {
     expect(plainText("`a` and **b**")).toBe("a and b");
   });
+
+  it("turns single asterisks into emphasis", () => {
+    render(
+      <p>
+        <RichText text="what an effect *reacts to*, not what it *reads*" />
+      </p>,
+    );
+    expect(screen.getByText("reacts to").tagName).toBe("EM");
+    expect(screen.getByText("reads").tagName).toBe("EM");
+  });
+
+  it("never leaves an emphasis marker on screen", () => {
+    const { container } = render(
+      <p>
+        <RichText text="`a`, **b** and *c d*, then *e*" />
+      </p>,
+    );
+    expect(container.textContent).toBe("a, b and c d, then e");
+  });
+
+  it("leaves arithmetic and a lone asterisk alone", () => {
+    const { container } = render(
+      <p>
+        <RichText text="2 * 3 is 6, and * on its own is just a star" />
+      </p>,
+    );
+    expect(container.textContent).toBe("2 * 3 is 6, and * on its own is just a star");
+    expect(container.querySelector("em")).toBeNull();
+  });
+
+  it("does not emphasise across a code span", () => {
+    const { container } = render(
+      <p>
+        <RichText text="*see `x` here*" />
+      </p>,
+    );
+    expect(container.querySelector("em")).toBeNull();
+    expect(container.querySelector("code")?.textContent).toBe("x");
+  });
+
+  it("strips emphasis for plain contexts too", () => {
+    expect(plainText("`a`, **b** and *c d*")).toBe("a, b and c d");
+    expect(plainText("2 * 3")).toBe("2 * 3");
+  });
 });
 
 describe("exhibit prose", () => {
