@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { StateKey } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import type { CircuitState } from "@/lib/sims/circuit-breaker";
@@ -19,9 +19,17 @@ const STATES: { key: CircuitState; what: string }[] = [
 
 const clock = (ms: number) => `${(ms / 1000).toFixed(0)}s`;
 
+/* "2/3" reads as progress towards opening. Once failed probes take the count
+   past the threshold, a denominator no longer means anything. */
+const failures = (count: number, threshold: number) =>
+  count <= threshold ? `${count}/${threshold}` : `${count} in a row`;
+
 export function BreakerSim({ state }: { state: StateKey }) {
   const version = state === "fixed" ? "fixed" : "broken";
-  const endpointRef = useRef(new SimEndpoint(version));
+  /* Built once, not on every render; Reset swaps in a fresh one. The case
+     remounts the simulation when the state changes, so version is fixed. */
+  const endpointRef = useRef<SimEndpoint | null>(null);
+  endpointRef.current ??= new SimEndpoint(version);
   const [now, setNow] = useState(0);
   const [, forceRender] = useState(0);
   const [preflights, setPreflights] = useState(0);
@@ -37,10 +45,6 @@ export function BreakerSim({ state }: { state: StateKey }) {
     forceRender((n) => n + 1);
   }, [version, clear]);
 
-  useEffect(() => {
-    reset();
-  }, [reset]);
-
   const endpoint = endpointRef.current;
   const breaker = endpoint.breaker;
   const circuit = breaker.state;
@@ -52,7 +56,7 @@ export function BreakerSim({ state }: { state: StateKey }) {
       clock(now),
       outcome === "refused"
         ? "call() refused — the breaker would not admit it"
-        : `call() failed upstream (${breaker.consecutiveFailures}/3)`,
+        : `call() failed upstream (${failures(breaker.consecutiveFailures, breaker.failureThreshold)})`,
       outcome === "refused" ? tone : "neutral",
     );
     if (before !== breaker.state) {
@@ -105,6 +109,17 @@ export function BreakerSim({ state }: { state: StateKey }) {
   const stuck =
     circuit === "half-open" && !breaker.canAttempt(now) && version === "broken";
 
+  const nextProbe =
+    circuit === "closed"
+      ? "none"
+      : stuck
+        ? "never"
+        : circuit === "half-open"
+          ? "in flight"
+          : breaker.msUntilProbe(now) > 0
+            ? `in ${clock(breaker.msUntilProbe(now))}`
+            : "now";
+
   const nodeClass = (key: CircuitState) => {
     if (key !== circuit) return cx(s.node);
     if (stuck) return cx(s.node, s.nodeStuck);
@@ -114,9 +129,13 @@ export function BreakerSim({ state }: { state: StateKey }) {
 
   return (
     <div className={sim.sim}>
-      <div className={s.machine} aria-label="Circuit breaker state">
+      <div className={s.machine} role="group" aria-label="Circuit breaker states">
         {STATES.map((node) => (
-          <div key={node.key} className={nodeClass(node.key)}>
+          <div
+            key={node.key}
+            className={nodeClass(node.key)}
+            aria-current={node.key === circuit ? "true" : undefined}
+          >
             <span className={s.nodeName}>{node.key}</span>
             <span className={s.nodeWhat}>{node.what}</span>
           </div>
@@ -130,15 +149,11 @@ export function BreakerSim({ state }: { state: StateKey }) {
           value={circuit}
           tone={stuck ? "broken" : circuit === "closed" ? "fixed" : "neutral"}
         />
-        <Readout name="failures" value={`${breaker.consecutiveFailures}/3`} />
         <Readout
-          name="next probe"
-          value={
-            breaker.msUntilProbe(now) > 0
-              ? `in ${clock(breaker.msUntilProbe(now))}`
-              : "now"
-          }
+          name="failures"
+          value={failures(breaker.consecutiveFailures, breaker.failureThreshold)}
         />
+        <Readout name="next probe" value={nextProbe} />
         <Readout name="pre-flights" value={preflights} />
       </div>
 
@@ -146,9 +161,10 @@ export function BreakerSim({ state }: { state: StateKey }) {
         className={cx(
           s.verdict,
           stuck && s.verdictBroken,
-          circuit === "closed" && preflights > 0 && s.verdictFixed,
+          version === "fixed" && circuit === "closed" && preflights > 0 && s.verdictFixed,
         )}
         data-testid="breaker-verdict"
+        aria-live="polite"
       >
         {stuck
           ? "Half-open with no probe in flight. canAttempt() now returns false, and nothing will ever report back to change that — this endpoint is dead until the page reloads."

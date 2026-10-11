@@ -21,6 +21,8 @@ export interface RecogniserEvent {
   t: number;
   kind: RecogniserEventKind;
   text: string;
+  /** For a result: the words committed, without the log's quotation marks. */
+  words?: string;
 }
 
 export interface RunOptions {
@@ -55,8 +57,8 @@ export function runRecogniser(
   { ticks, switchAt }: RunOptions,
 ): RunResult {
   const events: RecogniserEvent[] = [];
-  const emit = (t: number, kind: RecogniserEventKind, text: string) =>
-    events.push({ t, kind, text });
+  const emit = (t: number, kind: RecogniserEventKind, text: string, said?: string) =>
+    events.push(said === undefined ? { t, kind, text } : { t, kind, text, words: said });
 
   let running = false;
   let language = "en-US";
@@ -137,7 +139,7 @@ export function runRecogniser(
         const word = SENTENCE[phrase];
         if (word !== undefined) {
           words.push(word);
-          emit(t, "result", `"${word}"`);
+          emit(t, "result", `"${word}"`, word);
         }
         phrase += 1;
       }

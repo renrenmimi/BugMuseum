@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { StateKey } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import type { RecogniserEvent } from "@/lib/sims/restart-loop";
@@ -45,12 +45,8 @@ export function RecogniserSim({ state }: { state: StateKey }) {
   const [tick, setTick] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [switchAt, setSwitchAt] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    setTick(0);
-    setPlaying(false);
-    setSwitchAt(undefined);
-  }, [version]);
+  const stepRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
 
   const run = useMemo(
     () => runRecogniser(version, { ticks: MAX_TICKS, switchAt }),
@@ -77,10 +73,21 @@ export function RecogniserSim({ state }: { state: StateKey }) {
     tone: TONE[e.kind],
   }));
 
-  const words = shown.filter((e) => e.kind === "result").map((e) => e.text);
+  const words = shown.filter((e) => e.kind === "result").map((e) => e.words ?? e.text);
   const fragments = shown.filter((e) => e.kind === "partial");
   const starts = countOf(shown, "start");
   const ends = countOf(shown, "end");
+  /* The fix still bounces the engine once, on purpose, when the language
+     really changes. Only ends beyond that are the bug. */
+  const expectedEnds =
+    version === "fixed" && switchAt !== undefined && tick >= switchAt ? 1 : 0;
+  const atEnd = tick >= MAX_TICKS;
+
+  /* Reaching the end disables "Step one tick". If it had focus, give it to
+     Reset before the browser drops it onto the document body. */
+  useLayoutEffect(() => {
+    if (atEnd && document.activeElement === stepRef.current) resetRef.current?.focus();
+  }, [atEnd]);
 
   return (
     <div className={sim.sim}>
@@ -107,22 +114,30 @@ export function RecogniserSim({ state }: { state: StateKey }) {
         <button
           type="button"
           className={sim.btn}
+          ref={stepRef}
           onClick={() => setTick((t) => Math.min(MAX_TICKS, t + 1))}
-          disabled={tick >= MAX_TICKS}
+          disabled={atEnd}
         >
           Step one tick
         </button>
         <button
           type="button"
           className={sim.btn}
-          onClick={() => setSwitchAt(switchAt === undefined ? 6 : undefined)}
+          onClick={() => {
+            /* A different scenario is a different run: start it from the top
+               rather than rewriting the part already shown. */
+            setSwitchAt(switchAt === undefined ? 6 : undefined);
+            setTick(0);
+            setPlaying(false);
+          }}
           aria-pressed={switchAt !== undefined}
         >
-          {switchAt === undefined ? "Switch language at tick 6" : "No language switch"}
+          Switch language at tick 6
         </button>
         <button
           type="button"
           className={sim.btn}
+          ref={resetRef}
           onClick={() => {
             setTick(0);
             setPlaying(false);
@@ -139,7 +154,7 @@ export function RecogniserSim({ state }: { state: StateKey }) {
           value={starts}
           tone={starts > 2 ? "broken" : "fixed"}
         />
-        <Readout name="onend" value={ends} tone={ends > 0 ? "broken" : "fixed"} />
+        <Readout name="onend" value={ends} tone={ends > expectedEnds ? "broken" : "fixed"} />
         <Readout
           name="words kept"
           value={words.length}
