@@ -259,10 +259,21 @@ What the tests actually assert, rather than screenshot:
 - **Direct URLs**: every exhibit route, `#broken` / `#first-fix` / `#fixed`
   fragments, a bad fragment falling back, and a 404 for an unknown slug.
 - **Overflow**: no element extends past the viewport on any page at 360px.
-- **Reduced motion**: transitions are disabled and the restore still reads as a
-  journey rather than a glide.
+- **Reduced motion**: transitions are disabled, and the drawer's First fix
+  restore takes a few visible steps instead of gliding — sampled frame by frame.
 - **No JavaScript**: the gallery and every exhibit page still read as documents.
-- **No console errors or hydration warnings** on any route.
+- **Payload**: the gallery, an exhibit page and the home payload every page
+  prefetches carry no wall text; client components get only the fields they
+  render.
+- **Share tags**: every exhibit and `/about` share under their own title and
+  address, with the site picture; the 404 page has its own title and a single
+  `noindex`.
+- **Content guards**: an excerpt marked *from this repository* must appear, line
+  by line, in the file it links to; rendered prose has no leftover markup and one
+  quotation style.
+- **No console errors or hydration warnings** on any route — listened for four
+  seconds after load, so late messages are caught. The one expected message is
+  Chrome noting that a prefetched route's stylesheet has not been used yet.
 
 `node scripts/screenshots.mjs` writes full-page captures at 1440, 390 and 360px
 to `screenshots/` for visual review. Those are for looking at, not asserting on.
@@ -290,14 +301,20 @@ change: 200 is right, 302 means the origin is not a production domain.
   between options.
 - The drawer simulation traps nothing it should not, returns focus to the
   control that opened it, and closes on Escape from anywhere.
-- Every simulation writes an event log, so anyone who cannot perceive the
-  motion can read what happened instead.
+- Four of the six simulations — the drawer, the breaker, the recogniser and the
+  double submit — write an event log, so anyone who cannot perceive the motion
+  can read what happened instead. The log is a `role="log"` region, so a screen
+  reader announces each new line. The other two say what each step did in text
+  beside the case: the two-tabs frame and the day case's verdicts are polite
+  live regions.
 - `prefers-reduced-motion` switches decorative transitions off. The one place
   motion is the content — the drawer's slow restore — becomes a stepped
   restore rather than disappearing.
 - Body text is warm off-white on warm off-black. Every ink/surface pair in
   `styles/tokens.css` is measured against WCAG AA by `tests/unit/contrast.test.ts`
-  — that check is what caught `--ink-3` at 4.40:1 against the display case.
+  — that check is what caught `--ink-3` at 4.40:1 against the display case. The
+  same test composites the translucent tints and faded labels used in the
+  gallery and the cases over the surfaces they sit on, and measures the result.
 - No colour is the only carrier of meaning; the three state colours are always
   paired with a label.
 - Nothing is hidden behind hover.
