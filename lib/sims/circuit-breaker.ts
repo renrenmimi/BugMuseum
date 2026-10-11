@@ -20,7 +20,7 @@ export class SimBreaker {
   private failures = 0;
   private currentState: CircuitState = "closed";
   private backoffMs: number;
-  private nextProbeAt = 0;
+  private probeAt = 0;
 
   readonly failureThreshold: number;
   private readonly initialBackoffMs: number;
@@ -50,7 +50,7 @@ export class SimBreaker {
 
   msUntilProbe(now: number): number {
     return this.currentState === "open"
-      ? Math.max(0, this.nextProbeAt - now)
+      ? Math.max(0, this.probeAt - now)
       : 0;
   }
 
@@ -62,7 +62,7 @@ export class SimBreaker {
     if (this.currentState === "closed") return true;
 
     if (this.version === "broken") {
-      if (this.currentState === "open" && now >= this.nextProbeAt) {
+      if (this.currentState === "open" && now >= this.probeAt) {
         this.currentState = "half-open";
         return true;
       }
@@ -73,14 +73,15 @@ export class SimBreaker {
       // A probe is already in flight; it alone decides what happens next.
       return false;
     }
-    return now >= this.nextProbeAt;
+    return now >= this.probeAt;
   }
 
   /**
-   * The claim. Only the fixed version has one — in the broken version the
-   * call site re-asked the question, which had already been spent.
+   * The claim: a request is going out now, so hold the probe slot for it.
+   * Only the fixed version has one — in the broken version the call site
+   * re-asked the question, which had already been spent.
    */
-  beginAttempt(now: number): boolean {
+  reserveSlot(now: number): boolean {
     if (this.version === "broken") return this.canAttempt(now);
     if (!this.canAttempt(now)) return false;
     if (this.currentState === "open") this.currentState = "half-open";
@@ -108,7 +109,7 @@ export class SimBreaker {
 
   private open(now: number): void {
     this.currentState = "open";
-    this.nextProbeAt = now + this.backoffMs;
+    this.probeAt = now + this.backoffMs;
   }
 }
 
@@ -139,7 +140,7 @@ export class SimEndpoint {
     const allowed =
       this.version === "broken"
         ? this.breaker.canAttempt(now)
-        : this.breaker.beginAttempt(now);
+        : this.breaker.reserveSlot(now);
 
     if (!allowed) return "refused";
 

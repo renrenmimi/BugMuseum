@@ -70,10 +70,10 @@ describe("the fixed breaker", () => {
   it("refuses a second concurrent probe while one is in flight", () => {
     const endpoint = new SimEndpoint("fixed");
     openIt(endpoint);
-    expect(endpoint.breaker.beginAttempt(30_000)).toBe(true);
+    expect(endpoint.breaker.reserveSlot(30_000)).toBe(true);
     expect(endpoint.breaker.state).toBe("half-open");
     expect(endpoint.breaker.canAttempt(30_000)).toBe(false);
-    expect(endpoint.breaker.beginAttempt(30_000)).toBe(false);
+    expect(endpoint.breaker.reserveSlot(30_000)).toBe(false);
   });
 
   it("doubles the backoff when the probe fails, rather than sticking", () => {
