@@ -170,9 +170,9 @@ export default function AboutPage() {
             so does an excerpt that claims to be quoted without saying from where.
           </p>
           <p>
-            The museum is{" "}
+            The source is{" "}
             <a href={MUSEUM_REPO} rel="noreferrer">
-              open source
+              public on GitHub
             </a>
             , so every claim on this site can be checked against the file that
             makes it.
