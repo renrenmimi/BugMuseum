@@ -9,6 +9,7 @@ import { CodeExcerptBlock } from "@/components/museum/code-excerpt";
 import { Timeline } from "@/components/museum/timeline";
 import { SourceList } from "@/components/museum/source-list";
 import { RichText } from "@/components/museum/rich-text";
+import { SHARE_IMAGE } from "@/lib/share-image";
 import s from "../exhibit.module.css";
 
 export const dynamicParams = false;
@@ -24,7 +25,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const exhibit = getExhibit(slug);
-  if (!exhibit) return { title: "Exhibit not found" };
+  /* dynamicParams is false, so an unknown slug never reaches this function:
+     it goes straight to app/not-found.tsx, which has its own metadata. */
+  if (!exhibit) return {};
 
   const title = `${exhibit.title}`;
   return {
@@ -36,11 +39,13 @@ export async function generateMetadata({
       url: `/exhibits/${exhibit.slug}`,
       title: `${title} — Bug Museum`,
       description: exhibit.summary,
+      images: [SHARE_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} — Bug Museum`,
       description: exhibit.summary,
+      images: [SHARE_IMAGE],
     },
   };
 }

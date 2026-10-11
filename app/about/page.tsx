@@ -2,13 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { exhibits } from "@/content/exhibits";
 import { MUSEUM_REPO } from "@/content/schema";
+import { SHARE_IMAGE } from "@/lib/share-image";
 import s from "./about.module.css";
+
+const DESCRIPTION =
+  "What is real and what is modelled in Bug Museum, why the identifying project details were changed, and the evidence standard every exhibit has to meet.";
 
 export const metadata: Metadata = {
   title: "About the museum",
-  description:
-    "What is real, what is modelled and what is tested in Bug Museum, why the original project details were removed, and the evidence standard every exhibit has to meet.",
+  description: DESCRIPTION,
   alternates: { canonical: "/about" },
+  /* Set in full: a page's openGraph replaces the inherited one, so without
+     these the about page shares under the home page's title and address. */
+  openGraph: {
+    type: "website",
+    url: "/about",
+    siteName: "Bug Museum",
+    title: "About the museum — Bug Museum",
+    description: DESCRIPTION,
+    locale: "en_US",
+    images: [SHARE_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About the museum — Bug Museum",
+    description: DESCRIPTION,
+    images: [SHARE_IMAGE],
+  },
 };
 
 /* Spelled out, because "six cases from 4 settings" reads like a typo. */
