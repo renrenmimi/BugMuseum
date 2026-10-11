@@ -54,7 +54,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   },
 };
 
-const DRILLS = ["Softening a hard no", "Asking for a deadline"];
+const DRILLS = ["Mental arithmetic", "Estimation"];
 
 export function DaySim({ state }: { state: StateKey }) {
   const walkVersion = state === "broken" ? "milliseconds" : "calendar";
