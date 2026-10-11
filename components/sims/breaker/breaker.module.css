@@ -47,7 +47,8 @@
 }
 
 .nodeStuck .nodeName {
-  color: var(--broken);
+  /* --broken on its own tint measured 4.2–4.5:1; lifted to clear AA. */
+  color: #ea7d6f;
 }
 
 .nodeHealthy {

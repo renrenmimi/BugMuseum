@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { StateKey } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import {
@@ -8,7 +8,7 @@ import {
   fromLocal,
   isDaylight,
   localClock,
-  localDateKey,
+  calendarKey,
   rotationHour,
   rotationStrip,
   walkStreak,
@@ -62,6 +62,7 @@ export function DaySim({ state }: { state: StateKey }) {
 
   const [scenario, setScenario] = useState<Scenario>("spring");
   const [hour, setHour] = useState(SCENARIOS.spring.hour);
+  const sliderId = useId();
   const minute = 30;
 
   const config = SCENARIOS[scenario];
@@ -117,18 +118,19 @@ export function DaySim({ state }: { state: StateKey }) {
       </div>
 
       <div>
-        <label className="label" htmlFor="day-sim-hour">
-          Local time — {localDateKey(now)} {localClock(now)} ({ZONE_LABEL},
+        <label className="label" htmlFor={sliderId}>
+          Local time — {calendarKey(now)} {localClock(now)} ({ZONE_LABEL},
           {isDaylight(now) ? " UTC-7" : " UTC-8"})
         </label>
         <input
-          id="day-sim-hour"
+          id={sliderId}
           className={s.slider}
           type="range"
           min={0}
           max={23}
           step={1}
           value={hour}
+          aria-valuetext={`${localClock(now)} local time, ${calendarKey(now)}`}
           onChange={(e) => setHour(Number(e.target.value))}
         />
       </div>
@@ -200,7 +202,7 @@ export function DaySim({ state }: { state: StateKey }) {
             })}
           </div>
 
-          <p className={sim.hint} data-testid="walk-verdict">
+          <p className={sim.hint} data-testid="walk-verdict" aria-live="polite">
             {walk.skipped.length > 0
               ? `The walk never looked at ${walk.skipped.join(", ")}. ${config.note}`
               : walk.duplicates.length > 0
@@ -244,10 +246,10 @@ export function DaySim({ state }: { state: StateKey }) {
             </span>
           </p>
 
-          <p className={sim.hint} data-testid="drill-verdict">
+          <p className={sim.hint} data-testid="drill-verdict" aria-live="polite">
             {flipHour === 24
               ? "One drill for the whole local day. It changes at local midnight, which is when the cleared badge and the streak key roll over too."
-              : `The drill changes at ${String(flipHour).padStart(2, "0")}:00 local — mid-afternoon. Anyone who cleared it in the morning is offered a second one, and the badge resets.`}
+              : `The drill changes at ${String(flipHour).padStart(2, "0")}:00 local, in the late afternoon. Anyone who cleared it in the morning is offered a second one, and the badge resets.`}
           </p>
         </div>
       </div>

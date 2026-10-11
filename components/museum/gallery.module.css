@@ -50,7 +50,8 @@
 }
 
 .count {
-  opacity: 0.65;
+  /* 0.65 measured 4.22:1 (4.37:1 on a pressed chip); 0.8 clears AA on both. */
+  opacity: 0.8;
   margin-left: 6px;
 }
 

@@ -47,7 +47,9 @@
   flex: 1 1 168px;
   min-width: 0;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--rule-strong);
+  border: 1px solid;
+  /* The box has to be findable: 3:1 against the case, where --rule-strong was 1.9:1. */
+  border-color: rgba(236, 229, 216, 0.4);
   border-radius: var(--radius);
   padding: 8px 11px;
   min-height: 38px;
@@ -107,7 +109,8 @@
 
 .slotExtra {
   border-color: var(--broken-edge);
-  color: var(--broken);
+  /* --broken on its own tint measured 3.8–4.1:1 at this size; lifted to clear AA. */
+  color: #ee8a7d;
   background: var(--broken-dim);
 }
 

@@ -69,3 +69,87 @@ describe("the three weights stay distinguishable", () => {
     expect(b).toBeGreaterThan(c ?? 0);
   });
 });
+
+/* ------------------------------------------------------------
+   Text that does not sit on a plain token: on a state colour's own
+   tint, or drawn with opacity. These read the values the stylesheets
+   actually set, so a change there is measured here.
+   ------------------------------------------------------------ */
+
+type RGB = [number, number, number];
+
+const rgb = (hex: string): RGB => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+const toHex = ([r, g, b]: RGB) =>
+  `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`;
+
+/** `colour` at `alpha` over `under`. */
+const over = (colour: RGB, alpha: number, under: RGB): RGB => [
+  colour[0] * alpha + under[0] * (1 - alpha),
+  colour[1] * alpha + under[1] * (1 - alpha),
+  colour[2] * alpha + under[2] * (1 - alpha),
+];
+
+/** One declaration from a CSS module, by selector and property. */
+function declared(file: string, selector: string, property: string): string {
+  const css = readFileSync(file, "utf8");
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const block = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`))?.[1];
+  const value = block?.match(new RegExp(`(?:^|;|\\s)${property}:\\s*([^;]+);`))?.[1];
+  if (!value) throw new Error(`${selector} { ${property} } not found in ${file}`);
+  return value.trim();
+}
+
+/** A colour that is either a hex literal or var(--token). */
+const colourOf = (value: string): RGB =>
+  rgb(value.startsWith("var(") ? token(value.slice(6, -1)) : value);
+
+/* Both ends of the display case's gradient; light text is weakest on the lighter one. */
+const CASE_ENDS = [rgb(token("case")), rgb(token("case-2"))];
+const DIM = 0.14; // --broken-dim and friends
+const BLACK: RGB = [0, 0, 0];
+
+describe("text on tints and with opacity, as the stylesheets set it", () => {
+  it("gallery chip counts stay readable, pressed or not", () => {
+    const opacity = Number(declared("components/museum/gallery.module.css", ".count", "opacity"));
+    const wall = rgb(token("wall"));
+    const accent = rgb(token("accent"));
+    const idle = contrast(toHex(over(rgb(token("ink-2")), opacity, wall)), token("wall"));
+    const pressed = contrast(toHex(over(wall, opacity, accent)), token("accent"));
+    expect(idle, `${idle.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+    expect(pressed, `${pressed.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("an extra timer in the double-submit queue reads on its red tint", () => {
+    const text = colourOf(declared("components/sims/blanks/blanks.module.css", ".slotExtra", "color"));
+    for (const end of CASE_ENDS) {
+      const ground = over(rgb(token("broken")), DIM, end);
+      const ratio = contrast(toHex(text), toHex(ground));
+      expect(ratio, `${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("a stranded breaker state reads on its red tint", () => {
+    const text = colourOf(
+      declared("components/sims/breaker/breaker.module.css", ".nodeStuck .nodeName", "color"),
+    );
+    for (const end of CASE_ENDS) {
+      const ground = over(rgb(token("broken")), DIM, over(BLACK, 0.22, end));
+      const ratio = contrast(toHex(text), toHex(ground));
+      expect(ratio, `${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("the answer box's border is visible against the case (3:1)", () => {
+    const border = declared("components/sims/blanks/blanks.module.css", ".input", "border-color");
+    const alpha = Number(border.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/)?.[1]);
+    for (const end of CASE_ENDS) {
+      const edge = over(rgb(token("ink")), alpha, end);
+      const ratio = contrast(toHex(edge), toHex(end));
+      expect(ratio, `${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

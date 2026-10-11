@@ -30,7 +30,9 @@ export function EventLog({
   }, [lastId]);
 
   return (
-    <div className={s.log} ref={boxRef}>
+    /* A log region: assistive technology announces each line as it is
+       appended, so the story is told as it happens, not only on request. */
+    <div className={s.log} ref={boxRef} role="log">
       {entries.length === 0 ? (
         <p className={s.logEmpty}>{empty}</p>
       ) : (

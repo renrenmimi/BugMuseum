@@ -90,7 +90,7 @@
   background: rgba(236, 229, 216, 0.05);
 }
 
-.site-nav a[aria-current="page"] {
+.site-nav a[aria-current] {
   color: var(--ink);
   box-shadow: inset 0 -1px 0 var(--accent);
 }

@@ -62,7 +62,7 @@ export function fromLocal(p: LocalParts): number {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** A date key read from local calendar fields, never from UTC. */
-export function localDateKey(utcMs: number): string {
+export function calendarKey(utcMs: number): string {
   const p = toLocal(utcMs);
   return `${p.year}-${pad(p.month + 1)}-${pad(p.day)}`;
 }
@@ -121,7 +121,7 @@ export function walkStreak(
 
   for (let day = 0; day < maxSteps; day += 1) {
     const instant = version === "milliseconds" ? now - day * DAY_MS : cursor;
-    const key = localDateKey(instant);
+    const key = calendarKey(instant);
     visited.add(key);
     const hit = cleared.has(key);
     let counted = false;

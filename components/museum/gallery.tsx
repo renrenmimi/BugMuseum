@@ -39,7 +39,7 @@ export function Gallery({
 
   return (
     <div className={s.wrap}>
-      <div className={s.filters}>
+      <div className={s.filters} role="group" aria-labelledby="filter-label">
         <span className={s.filterLabel} id="filter-label">
           Filter
         </span>

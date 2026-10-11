@@ -4,7 +4,7 @@ import {
   drillIndex,
   fromLocal,
   isDaylight,
-  localDateKey,
+  calendarKey,
   rotationHour,
   walkStreak,
 } from "@/lib/sims/local-day";
@@ -35,19 +35,19 @@ describe("the fixed America/Los_Angeles model", () => {
   });
 
   it("round-trips a local wall clock through an instant", () => {
-    expect(localDateKey(at(2026, 2, 10, 0, 30))).toBe("2026-03-10");
-    expect(localDateKey(at(2026, 2, 8, 23, 59))).toBe("2026-03-08");
-    expect(localDateKey(at(2026, 10, 1, 0, 30))).toBe("2026-11-01");
+    expect(calendarKey(at(2026, 2, 10, 0, 30))).toBe("2026-03-10");
+    expect(calendarKey(at(2026, 2, 8, 23, 59))).toBe("2026-03-08");
+    expect(calendarKey(at(2026, 10, 1, 0, 30))).toBe("2026-11-01");
   });
 
   it("steps calendar days across both transitions", () => {
-    expect(localDateKey(addLocalDays(at(2026, 2, 10, 0, 30), -2))).toBe(
+    expect(calendarKey(addLocalDays(at(2026, 2, 10, 0, 30), -2))).toBe(
       "2026-03-08",
     );
-    expect(localDateKey(addLocalDays(at(2026, 10, 3, 0, 30), -2))).toBe(
+    expect(calendarKey(addLocalDays(at(2026, 10, 3, 0, 30), -2))).toBe(
       "2026-11-01",
     );
-    expect(localDateKey(addLocalDays(at(2026, 10, 1, 23, 30), -1))).toBe(
+    expect(calendarKey(addLocalDays(at(2026, 10, 1, 23, 30), -1))).toBe(
       "2026-10-31",
     );
   });
@@ -102,7 +102,7 @@ describe("the streak walk, by calendar date", () => {
 });
 
 describe("the drill rotation", () => {
-  it("rotates mid-afternoon while it counts UTC days", () => {
+  it("rotates in the late afternoon while it counts UTC days", () => {
     const dayStart = at(2026, 5, 10, 0);
     expect(rotationHour("utc", dayStart)).toBe(17); // UTC-7 in June
   });
