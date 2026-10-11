@@ -1,7 +1,7 @@
 # Bug Museum
 
 An interactive museum of six anonymised debugging cases. Each exhibit lets you
-reproduce the broken behaviour, switch to the fix, read why it happened, and run
+reproduce the broken behaviour, switch to the fix, read why it happened, and read
 the test that keeps it from coming back.
 
 Based on bugs encountered during real project work. Identifying project details
@@ -338,6 +338,8 @@ change: 200 is right, 302 means the origin is not a production domain.
    excerpts are rewritten for the museum rather than trimmed from the original.
 
 No analytics, no cookies, no tracking.
+
+Changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
