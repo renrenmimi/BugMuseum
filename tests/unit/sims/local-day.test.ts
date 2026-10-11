@@ -53,7 +53,7 @@ describe("the fixed America/Los_Angeles model", () => {
   });
 });
 
-describe("computeStreak, in milliseconds", () => {
+describe("the streak walk, in milliseconds", () => {
   it("skips the 23-hour day when run just after midnight", () => {
     const result = walkStreak("milliseconds", at(2026, 2, 10, 0, 30), SPRING);
     expect(result.skipped).toContain("2026-03-08");
@@ -72,7 +72,7 @@ describe("computeStreak, in milliseconds", () => {
   });
 });
 
-describe("computeStreak, by calendar date", () => {
+describe("the streak walk, by calendar date", () => {
   it("survives the spring-forward boundary just after midnight", () => {
     const result = walkStreak("calendar", at(2026, 2, 10, 0, 30), SPRING);
     expect(result.skipped).toEqual([]);
@@ -101,7 +101,7 @@ describe("computeStreak, by calendar date", () => {
   });
 });
 
-describe("todaysDrill", () => {
+describe("the drill rotation", () => {
   it("rotates mid-afternoon while it counts UTC days", () => {
     const dayStart = at(2026, 5, 10, 0);
     expect(rotationHour("utc", dayStart)).toBe(17); // UTC-7 in June
