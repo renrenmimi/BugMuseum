@@ -3,6 +3,7 @@ import { CATEGORY_LABELS } from "@/content/schema";
 import { exhibits, featuredExhibit, usedCategories } from "@/content/exhibits";
 import { Gallery } from "@/components/museum/gallery";
 import { ExhibitStage } from "@/components/museum/exhibit-stage";
+import { toCard, toStage } from "@/components/museum/exhibit-props";
 import s from "./home.module.css";
 
 const CLAIMS = [
@@ -69,10 +70,8 @@ export default function HomePage() {
         </div>
 
         <div className={s.featured}>
-          <div style={{ minWidth: 0 }}>
-            <ExhibitStage exhibit={featured} syncHash={false} />
-          </div>
-
+          {/* Named first, so a phone reader knows what the case holds before
+              scrolling through it; on wide screens the case sits on the left. */}
           <div className={s.featuredAside}>
             <h2 id="featured-heading" className={s.featuredTitle}>
               <Link href={`/exhibits/${featured.slug}`}>{featured.title}</Link>
@@ -92,6 +91,10 @@ export default function HomePage() {
               Read the whole story
             </Link>
           </div>
+
+          <div className={s.featuredStage}>
+            <ExhibitStage exhibit={toStage(featured)} syncHash={false} />
+          </div>
         </div>
       </section>
 
@@ -100,7 +103,7 @@ export default function HomePage() {
           <p className="label">The collection</p>
           <h2 id="gallery-heading">All six exhibits</h2>
         </div>
-        <Gallery exhibits={exhibits} categories={categories} />
+        <Gallery exhibits={exhibits.map(toCard)} categories={categories} />
       </section>
 
       <section className={s.section} aria-labelledby="visit-heading">

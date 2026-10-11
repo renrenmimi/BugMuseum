@@ -84,6 +84,69 @@ test.describe("direct exhibit URLs", () => {
   });
 });
 
+test.describe("what the browser is sent", () => {
+  /* The gallery cards and the state switch are client components. They should
+     receive what they render, not the whole exhibit: the wall text is already
+     in the HTML as markup. */
+  for (const route of ["/", "/exhibits/drawer-scroll-lock"]) {
+    test(`${route} does not ship the exhibits' full text as client props`, async ({
+      page,
+    }) => {
+      const html = await (await page.request.get(route)).text();
+      expect(html.includes("whatHappened"), "whatHappened in the HTML").toBe(false);
+      expect(html.includes("rootCause"), "rootCause in the HTML").toBe(false);
+    });
+  }
+
+  test("the gallery data prefetched by every page is only the cards", async ({
+    page,
+  }) => {
+    const rsc = await (
+      await page.request.get("/?_rsc=probe", { headers: { RSC: "1" } })
+    ).text();
+    expect(rsc.includes("drawer-scroll-lock"), "the cards are there").toBe(true);
+    expect(rsc.includes("whatHappened"), "whatHappened in the payload").toBe(false);
+  });
+});
+
+test.describe("the state lives in the address", () => {
+  test("a fragment changed by hand switches the state", async ({ page }) => {
+    await page.goto("/exhibits/deleted-account-resurrection#broken");
+    await expect(page.getByRole("radio", { name: /^Broken$/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+
+    await page.evaluate(() => {
+      window.location.hash = "#fixed";
+    });
+    await expect(page.getByRole("radio", { name: /^Fixed$/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+});
+
+test.describe("the featured exhibit", () => {
+  test("is named before it is shown", async ({ page }) => {
+    await page.goto("/");
+    const title = page.locator("#featured-heading");
+    const stage = page.getByRole("radiogroup", { name: /which version/i });
+    const t = await title.boundingBox();
+    const g = await stage.boundingBox();
+    if (!t || !g) throw new Error("featured exhibit is missing");
+
+    const viewport = page.viewportSize();
+    if ((viewport?.width ?? 0) >= 1000) {
+      // Side by side: the case on the left, its label on the right.
+      expect(t.x).toBeGreaterThan(g.x + g.width);
+    } else {
+      // Stacked: the label comes first.
+      expect(t.y + t.height).toBeLessThan(g.y);
+    }
+  });
+});
+
 test.describe("moving through the gallery", () => {
   test("walks the whole collection with next, then back with previous", async ({
     page,

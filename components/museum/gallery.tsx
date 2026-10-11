@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Category, Exhibit } from "@/content/schema";
+import type { Category } from "@/content/schema";
 import { CATEGORY_LABELS } from "@/content/schema";
 import { ExhibitCard } from "./exhibit-card";
+import type { CardExhibit } from "./exhibit-props";
 import s from "./gallery.module.css";
 
 /**
@@ -15,7 +16,7 @@ export function Gallery({
   exhibits,
   categories,
 }: {
-  exhibits: readonly Exhibit[];
+  exhibits: readonly CardExhibit[];
   categories: readonly Category[];
 }) {
   const [active, setActive] = useState<Category | null>(null);

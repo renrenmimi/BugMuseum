@@ -1,7 +1,7 @@
 import Link from "next/link";
-import type { Exhibit } from "@/content/schema";
 import { CATEGORY_LABELS } from "@/content/schema";
 import { cx } from "@/lib/cx";
+import type { CardExhibit } from "./exhibit-props";
 import s from "./museum.module.css";
 
 const STATE_DOT: Record<string, string | undefined> = {
@@ -10,7 +10,7 @@ const STATE_DOT: Record<string, string | undefined> = {
   fixed: s.dotFixed,
 };
 
-export function ExhibitCard({ exhibit }: { exhibit: Exhibit }) {
+export function ExhibitCard({ exhibit }: { exhibit: CardExhibit }) {
   const number = String(exhibit.number).padStart(2, "0");
 
   return (
