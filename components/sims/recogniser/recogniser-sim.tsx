@@ -90,7 +90,7 @@ export function RecogniserSim({ state }: { state: StateKey }) {
       >
         {version === "fixed"
           ? "useEffect(() => { … }, [language])  // + a ref for the applied one"
-          : "useEffect(() => { … }, [isRecognizing, language])  // it sets this"}
+          : "useEffect(() => { … }, [isRecognizing, language])  // it changes this"}
       </p>
 
       <div className={sim.controls}>
