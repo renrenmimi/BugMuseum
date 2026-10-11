@@ -104,7 +104,8 @@ export type ExcerptKind = "diff" | "code";
  * Where an excerpt's text comes from, stated rather than implied.
  *
  * - "reproduction": a minimal, generic rewrite of the pattern being described.
- *   It is not copied from anywhere and is not presented as a quotation.
+ *   It is written from scratch, not copied or trimmed from the original code,
+ *   and is not presented as a quotation.
  * - "museum-source": copied from a file in this repository, which is linked.
  */
 export type ExcerptOrigin = "reproduction" | "museum-source";
@@ -147,7 +148,7 @@ export const TIMELINE_PHASES: readonly TimelinePhase[] = [
 ];
 
 export const TIMELINE_PHASE_LABELS: Record<TimelinePhase, string> = {
-  discovered: "Observed",
+  discovered: "Discovered",
   attempted: "First fix",
   fixed: "Final fix",
   "regression-test": "Pinned by a test",

@@ -57,7 +57,7 @@ export default function OpenGraphImage() {
             working out left in.
           </span>
           <span style={{ color: "#b7ad9d", fontSize: 30, marginTop: 12 }}>
-            Six defects from four of my own projects — broken, first fix, fixed.
+            Six defects from my own projects — broken, first fix, fixed.
           </span>
         </div>
 

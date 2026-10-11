@@ -7,7 +7,7 @@ import { SiteNav } from "@/components/museum/site-nav";
 
 const SITE_URL = "https://bugmuseum.vercel.app";
 const DESCRIPTION =
-  "An interactive museum of six anonymised debugging cases — the broken behaviour, the fix that was not quite enough, the root cause, and the test that keeps it from coming back.";
+  "An interactive museum of six anonymised debugging cases — the broken behaviour, the fix (and, for three of them, the fix that was not enough), the root cause, and the test that keeps it from coming back.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -75,8 +75,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <footer className="site-foot">
             <div className="page site-foot__inner">
               <p>
-                Six anonymised debugging cases. Every claim links to the file in
-                this repository that makes it.
+                Six anonymised debugging cases. Every exhibit links to the files
+                in this repository that back it.
               </p>
               <p>
                 <a
