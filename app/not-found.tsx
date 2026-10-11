@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Not found",
+  description: "Nothing has been catalogued at this address.",
+  /* Replaces the inherited openGraph, whose url is the home page's. */
+  openGraph: { siteName: "Bug Museum", title: "Not found — Bug Museum" },
+};
 
 export default function NotFound() {
   return (

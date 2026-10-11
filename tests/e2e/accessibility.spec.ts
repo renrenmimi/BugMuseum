@@ -287,6 +287,53 @@ test.describe("metadata", () => {
     expect(description).toContain("streak");
   });
 
+  test("every exhibit can be shared with a picture, under its own address", async ({
+    page,
+  }) => {
+    for (const slug of [
+      "drawer-scroll-lock",
+      "circuit-breaker-half-open",
+      "local-day-boundary",
+      "speech-restart-loop",
+      "deleted-account-resurrection",
+      "double-submit-skipped-blank",
+    ]) {
+      await page.goto(`/exhibits/${slug}`);
+      const meta = (selector: string) =>
+        page.locator(selector).first().getAttribute("content");
+      expect(await meta('meta[property="og:image"]'), slug).toContain("/opengraph-image");
+      expect(await meta('meta[name="twitter:image"]'), slug).toContain("/opengraph-image");
+      expect(await meta('meta[property="og:url"]'), slug).toMatch(
+        new RegExp(`/exhibits/${slug}$`),
+      );
+    }
+  });
+
+  test("the about page shares as itself", async ({ page }) => {
+    await page.goto("/about");
+    const meta = (selector: string) =>
+      page.locator(selector).first().getAttribute("content");
+    expect(await meta('meta[property="og:url"]')).toMatch(/\/about$/);
+    expect(await meta('meta[property="og:title"]')).toContain("About");
+    expect(await meta('meta[property="og:image"]')).toContain("/opengraph-image");
+    const description = (await meta('meta[name="description"]')) ?? "";
+    expect(description).not.toContain("what is tested");
+    expect(description).toContain("changed");
+  });
+
+  test("a missing page says so, and asks not to be indexed", async ({ page }) => {
+    const response = await page.goto("/exhibits/not-a-real-bug");
+    expect(response?.status()).toBe(404);
+    await expect(page).toHaveTitle(/not found/i);
+
+    const robots = await page.locator('meta[name="robots"]').evaluateAll((els) =>
+      els.map((el) => el.getAttribute("content")),
+    );
+    expect(robots).toEqual(["noindex"]);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+    await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
+  });
+
   test("the sitemap lists every route", async ({ page }) => {
     const response = await page.goto("/sitemap.xml");
     const body = (await response?.text()) ?? "";

@@ -11,11 +11,20 @@ const EXHIBITS = [
 
 const ROUTES = ["/", "/about", ...EXHIBITS.map((s) => `/exhibits/${s}`)];
 
+/* Next.js prefetches the routes linked from the header, which preloads their
+   stylesheets, and about three seconds after load Chrome warns that a
+   preloaded stylesheet was not used. The stylesheet is for the next page,
+   not this one, so the warning is expected. It is named here, rather than
+   avoided by giving up before it arrives. */
+const PREFETCHED_STYLESHEET =
+  /\/_next\/static\/css\/[^ ]+\.css was preloaded using link preload but not used within a few seconds/;
+
 /** Fails the test on anything the browser complains about, hydration included. */
 function watchConsole(page: Page) {
   const problems: string[] = [];
   page.on("console", (msg) => {
     if (msg.type() === "error" || msg.type() === "warning") {
+      if (PREFETCHED_STYLESHEET.test(msg.text())) return;
       problems.push(`${msg.type()}: ${msg.text()}`);
     }
   });
@@ -35,8 +44,8 @@ test.describe("every page", () => {
       await expect(page.locator("h1")).toHaveCount(1);
       await expect(page.locator("h1")).not.toBeEmpty();
 
-      // Give hydration a chance to complain.
-      await page.waitForTimeout(400);
+      // Long enough for hydration, and for the late warnings, to arrive.
+      await page.waitForTimeout(4000);
       expect(problems).toEqual([]);
     });
   }

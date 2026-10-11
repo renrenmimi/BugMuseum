@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CATEGORY_LABELS } from "@/content/schema";
 import { exhibits, featuredExhibit, usedCategories } from "@/content/exhibits";
@@ -35,6 +36,10 @@ const VISIT = [
     body: "The explanation, the code and the regression test are underneath; the test and the simulation link to the files in this repository that hold them.",
   },
 ];
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   const featured = featuredExhibit();

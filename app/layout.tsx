@@ -40,8 +40,10 @@ export const metadata: Metadata = {
     title: "Bug Museum — real bugs, with the working out left in",
     description: DESCRIPTION,
   },
-  alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
+  /* No canonical and no robots here. Inherited, they gave the 404 page a
+     canonical pointing at the home page and an "index, follow" beside the
+     "noindex" Next.js adds. The home page sets its own canonical; indexing
+     is the default without a robots tag. */
 };
 
 export const viewport: Viewport = {
