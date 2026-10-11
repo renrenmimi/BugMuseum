@@ -491,7 +491,9 @@ export function validateExhibit(exhibit: Exhibit): string[] {
         at(`diff "${ex.caption}" has no added line`);
       }
     }
-    /* A code column that wide overflows the case on a 360px phone. */
+    /* 84 characters fit in the case without wrapping from about 670px wide.
+       Narrower screens wrap longer lines with a hanging indent
+       (components/museum/museum.module.css) rather than scrolling them. */
     const overlong = ex.lines.find((l) => l.length > 84);
     if (overlong !== undefined) {
       at(`a line in "${ex.caption}" is ${overlong.length} chars — wrap it`);

@@ -175,6 +175,8 @@
 /* --- code --------------------------------------------------- */
 
 .code {
+  /* A <figure> brings a 40px inline margin of its own. */
+  margin: 0;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: #100e0b;
@@ -218,11 +220,38 @@
   tab-size: 2;
 }
 
+.codePre code {
+  display: block;
+}
+
 .codeLine {
   display: block;
   padding-inline: var(--s-3);
   white-space: pre;
   color: var(--ink-2);
+}
+
+/* Phones wrap long lines rather than hiding the end of every line past the
+   right edge of a box that shows no scrollbar. A continuation hangs two
+   columns in from where its own line's code starts (--indent, set per line in
+   code-excerpt.tsx), so it still reads as part of that line. */
+@media (max-width: 719px) {
+  .codeLine {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding-left: calc(var(--s-3) + var(--indent, 0ch) + 2ch);
+    text-indent: calc(-1 * (var(--indent, 0ch) + 2ch));
+  }
+}
+
+/* Wider screens never wrap: content/schema.ts keeps every line to 84
+   characters, which fit from about 670px. If one ever does overflow, the line
+   boxes grow with it, so a diff's colours run the length of the scrolled line
+   instead of stopping at the frame. */
+@media (min-width: 720px) {
+  .codePre code {
+    min-width: max-content;
+  }
 }
 
 .codeAdd {

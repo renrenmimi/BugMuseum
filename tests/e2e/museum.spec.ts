@@ -168,6 +168,39 @@ test.describe("source links", () => {
   });
 });
 
+test.describe("code excerpts", () => {
+  for (const slug of EXHIBITS) {
+    test(`/exhibits/${slug}: every excerpt fits its frame and lines up with the text`, async ({
+      page,
+    }) => {
+      await page.goto(`/exhibits/${slug}`);
+      const figures = await page.evaluate(() => {
+        const column = document.querySelector("#code-heading")?.getBoundingClientRect().left ?? 0;
+        return Array.from(document.querySelectorAll("figure")).map((figure) => {
+          const pre = figure.querySelector("pre");
+          const lines = Array.from(figure.querySelectorAll("pre code > span"));
+          return {
+            caption: figure.querySelector("figcaption")?.textContent?.slice(0, 48) ?? "?",
+            indent: Math.round(figure.getBoundingClientRect().left - column),
+            sideways: pre ? pre.scrollWidth - pre.clientWidth : 0,
+            /* A line narrower than its own text is a diff colour that stops
+               part-way along the line. */
+            clipped: lines.filter((l) => l.scrollWidth > l.getBoundingClientRect().width + 1)
+              .length,
+          };
+        });
+      });
+
+      expect(figures.length).toBeGreaterThan(0);
+      for (const f of figures) {
+        expect(f.indent, `${f.caption}: indented from the column`).toBe(0);
+        expect(f.sideways, `${f.caption}: scrolls sideways`).toBeLessThanOrEqual(1);
+        expect(f.clipped, `${f.caption}: lines wider than their box`).toBe(0);
+      }
+    });
+  }
+});
+
 test.describe("privacy", () => {
   /* The rendered pages are the thing a visitor actually sees, so the same
      rules that guard the exhibit data are re-run against the HTML. */
