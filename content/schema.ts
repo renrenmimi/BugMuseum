@@ -257,12 +257,6 @@ const ALLOWED_NAMES: readonly string[] = [
   "ReturnType",
   "FormEvent",
   "ReactNode",
-  // identifiers that appear in the reproductions
-  "CircuitBreaker",
-  "BreakerOpenError",
-  "AuthContext",
-  "UserProfile",
-  "HttpsError",
   // this project's own exports, quoted in the test excerpts
   "SimEndpoint",
   "SimBreaker",
