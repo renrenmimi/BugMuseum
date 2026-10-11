@@ -5,8 +5,8 @@ reproduce the broken behaviour, switch to the fix, read why it happened, and run
 the test that keeps it from coming back.
 
 Based on bugs encountered during real project work. Identifying project details
-have been changed, and each behaviour is reproduced here as a deterministic
-simulation.
+have been changed, and each behaviour is reproduced here as a simulation you can
+drive.
 
 Live: <https://bugmuseum.vercel.app>
 
@@ -47,22 +47,26 @@ it. Each exhibit is labelled by its setting instead.
 **Modelled**
 
 - Every demonstration. Nothing here talks to a server, a microphone or a model
-  API. Each simulation re-implements the mechanism so you can drive it.
-- Every code excerpt marked *minimal reproduction*: written for this museum to
-  show the pattern, not quoted from anyone's source.
+  API. Most simulations re-implement the mechanism so you can drive it; exhibit
+  05 steps through a hand-written sequence instead.
+- Every code excerpt marked *minimal reproduction*: rewritten for this museum to
+  show the pattern, not quoted or trimmed from anyone's source.
 - The content inside the simulations — page titles, drill names, the three
   fill-in-the-blanks.
 - The clocks. Time zones, backoffs and 180ms ticks are modelled
   deterministically so the exhibits behave identically for every visitor and on
   every test runner.
 
-**Where the evidence is thinner**
+**How strong the evidence is**
 
-Exhibit 04 is modelled rather than driven in a real browser: the API it depends
-on does not exist in a Node test environment, so its loop is reproduced as a
-deterministic state machine. Its exhibit page says so in the section where the
-test would otherwise be, rather than implying end-to-end coverage it does not
-have.
+Only exhibit 01's test runs the defect's own mechanism: the drawer case drives
+the browser's real smooth scrolling. Exhibits 02, 03 and 06 re-implement their
+mechanism in plain TypeScript and test the re-implementation. Exhibit 04 models
+React's effect scheduling and the speech-recognition API, which does not exist
+in a Node test environment, as a deterministic state machine. Exhibit 05 is a
+hand-written sequence whose tests check that it keeps its invariants. Each
+exhibit page says which of these it is, in the section where the test is,
+rather than implying coverage it does not have.
 
 Every display case also carries a note explaining what it reproduces rather than
 runs, including where a delay was shortened to keep the demonstration bearable.
@@ -164,8 +168,8 @@ exhibit must supply at least its definition, its simulation and its test.
 - a `first-fix` state requires both `whyFirstFixFailed` and an `attempted`
   timeline entry — and vice versa;
 - the timeline runs in order and ends with a regression test;
-- no code line is wider than 84 characters, because that is where the case
-  starts scrolling sideways on a 360px phone;
+- no code line is wider than 84 characters, which fit unwrapped from about
+  670px; narrower screens wrap long lines;
 - exactly one featured exhibit; unique slugs and numbers.
 
 The privacy rules are written as patterns rather than as a list of names to keep
@@ -174,8 +178,8 @@ reject bare commit hashes, pull-request references, links to other repositories
 under the same owner, and words shaped like product names — technology names are
 allowed explicitly, so an unfamiliar one fails the check instead of shipping.
 
-Prose fields support `` `inline code` `` and `**emphasis**`; titles and
-summaries do not, because they are rendered as plain text into `<title>` and
+Prose fields support `` `inline code` ``, `**strong**` and `*emphasis*`; titles
+and summaries do not, because they are rendered as plain text into `<title>` and
 `og:description`.
 
 ## Adding an exhibit
@@ -188,10 +192,17 @@ summaries do not, because they are rendered as plain text into `<title>` and
 3. Put the logic the simulation runs in `lib/sims/` so it can be tested without
    a DOM, and test both versions of it — including the broken one.
 4. Add the exhibit to the array in `content/exhibits/index.ts`.
+5. Write each *minimal reproduction* from scratch. Do not trim it from the
+   original project's code: rename identifiers and rewrite comments, so the
+   excerpt shows the pattern without quoting its source.
+6. Do not reuse the original project's seed data, names or fixture strings in
+   a simulation. The content inside the case is written for the museum.
 
 No page, route or layout work is involved. `npm test` will fail loudly if the
-new exhibit breaks any of the rules above — including the provenance ones, so an
-outbound link or a stray commit hash stops the build rather than shipping.
+new exhibit breaks any of the validation rules above — including the provenance
+ones, so an outbound link or a stray commit hash fails the test run in CI.
+Steps 5 and 6 cannot be checked automatically without writing the names down;
+they are on the author.
 
 ## Local development
 
@@ -205,11 +216,11 @@ npm run dev          # http://localhost:3000
 ```bash
 npm run typecheck    # tsc --noEmit
 npm run lint         # next lint
-npm test             # Vitest: 137 tests
+npm test             # Vitest unit tests
 npm run build        # static export of every route
 
 npm run e2e:install  # once, downloads Chromium
-npm run e2e          # Playwright: 138 tests against `next start`, at 1280px and 390px
+npm run e2e          # Playwright against `next start`, at 1280px and 390px
 ```
 
 `npm run verify` runs typecheck, lint, unit tests and the production build in
@@ -229,9 +240,9 @@ nor the same timing.
 What the tests actually assert, rather than screenshot:
 
 - **The drawer.** The scroll position is sampled across five consecutive
-  `requestAnimationFrame` callbacks after the drawer closes, and the test first
-  asserts the container really is in `scroll-behavior: smooth` mode — otherwise
-  it would pass for the wrong reason. Waiting for the scroll to settle is what
+  `requestAnimationFrame` callbacks after the drawer closes, and a separate test
+  asserts that the container really is in `scroll-behavior: smooth` mode —
+  otherwise the suite would pass for the wrong reason. Waiting for the scroll to settle is what
   hides this bug.
 - **Background scroll.** Wheel events over the scrim move the page in the
   broken state and cannot move it in the locked ones; every way of closing
@@ -299,14 +310,15 @@ change: 200 is right, 302 means the origin is not a production domain.
    on trust.
 2. **No composite cases.** One exhibit, one defect, one fix history. Nothing here
    is two half-remembered incidents merged into a better story.
-3. **Say when the evidence is thinner.** Exhibit 04 is modelled rather than
-   driven in a browser, and its page says so where the test would be.
+3. **Say how strong the evidence is.** Only exhibit 01's test runs the defect's
+   own mechanism; the others test a re-implementation, a model or a hand-written
+   sequence, and each exhibit page says which.
 4. **Say when the simulation diverges.** Every display case carries a note.
 5. **The first fix stays in the record.** Where a fix was correct and turned out
    to be incomplete, it is on the wall next to the final one.
 6. **No project identities.** Exhibits describe the technical setting a case came
-   out of and never name the software. This is enforced by the validator, not by
-   discipline.
+   out of and never name the software. Names are kept out by the validator; code
+   excerpts are rewritten for the museum rather than trimmed from the original.
 
 No analytics, no cookies, no tracking.
 

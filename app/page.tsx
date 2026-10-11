@@ -12,7 +12,7 @@ const CLAIMS = [
   },
   {
     lead: "The first fix can introduce a second, subtler problem.",
-    body: "Locking the page behind a drawer worked. It also made closing the drawer take a 1.5-second scenic route back to where you were.",
+    body: "Locking the page behind a drawer worked. It also made closing the drawer take a second and a half to scroll back to where you were.",
   },
   {
     lead: "A passing test is not the same as a working system.",
@@ -23,15 +23,15 @@ const CLAIMS = [
 const VISIT = [
   {
     title: "Switch the state",
-    body: "Every case has a Broken / Fixed switch, and three of them have a First fix in between. The object in the case really is running that version of the code.",
+    body: "Every case has a Broken / Fixed switch, and three of them have a First fix in between. The object in the case runs a re-implementation of that version — in one case, a step-by-step script.",
   },
   {
     title: "Break it yourself",
-    body: "Scroll the phone, fail the requests, press Enter twice. Nothing here is a recording, and nothing runs code you type.",
+    body: "Scroll the phone, fail the requests, press Enter twice. Nothing here is a video, and nothing runs code you type.",
   },
   {
     title: "Then read the label",
-    body: "The explanation, the reproduction and the regression test are underneath, each linked to the file in this repository that holds it.",
+    body: "The explanation, the code and the regression test are underneath; the test and the simulation link to the files in this repository that hold them.",
   },
 ];
 

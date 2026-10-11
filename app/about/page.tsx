@@ -26,8 +26,8 @@ const REAL = [
 ];
 
 const MODELLED = [
-  "The demonstrations. Nothing here talks to a server, a microphone or a model API. Each simulation re-implements the mechanism so you can drive it.",
-  "The code excerpts. They are minimal reproductions of the pattern being described, written for this museum. They are labelled “minimal reproduction” and are not presented as quotations of anyone's source.",
+  "The demonstrations. Nothing here talks to a server, a microphone or a model API. Most simulations re-implement the mechanism so you can drive it; one steps through a hand-written sequence instead.",
+  "The code excerpts marked “minimal reproduction”. They are rewritten for this museum to show the pattern, not quoted or trimmed from anyone’s source. Excerpts marked “from this repository” are copied from the file they link to.",
   "The content inside the simulations: page titles, drill names, the three fill-in-the-blanks. Written here, not lifted from anywhere.",
   "The clocks. Time zones, backoffs and 180ms ticks are modelled deterministically so the exhibit behaves identically for every visitor and on every test runner.",
 ];
@@ -48,8 +48,8 @@ const RULES = [
     body: "Nothing here is two half-remembered incidents merged into a better story. One exhibit, one defect, one fix history.",
   },
   {
-    lead: "Say when the evidence is thinner.",
-    body: "One case is modelled rather than driven in a real browser, because the API it depends on does not exist in a test environment. Its exhibit says so in the section where the test would otherwise be.",
+    lead: "Say how strong the evidence is.",
+    body: "Exhibit 01’s test runs the defect’s own mechanism in a real browser. The others test a re-implementation of the mechanism, a model of a framework and an API, or a hand-written sequence, and each exhibit says which, in the section where its test is.",
   },
   {
     lead: "Say when the simulation diverges.",
@@ -78,7 +78,7 @@ export default function AboutPage() {
         <p className={s.lede}>
           Based on bugs encountered during real project work. Identifying project
           details have been changed, and each behaviour is reproduced here as a
-          deterministic simulation.
+          simulation you can drive.
         </p>
       </header>
 
@@ -166,8 +166,9 @@ export default function AboutPage() {
         <div className="prose">
           <p>
             Exhibits are plain data files, one per case, validated on every test
-            run — a link that points outside this repository fails the build, and
-            so does an excerpt that claims to be quoted without saying from where.
+            run — a link that points outside this repository fails the test
+            suite, and so does an excerpt that claims to be quoted without saying
+            from where.
           </p>
           <p>
             The source is{" "}
