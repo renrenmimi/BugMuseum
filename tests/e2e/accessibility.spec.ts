@@ -148,8 +148,13 @@ test.describe("keyboard", () => {
     ).toBeFocused();
     await page.keyboard.press("Enter");
 
-    // Opening a modal drawer moves focus into it.
+    // Opening the drawer moves focus into it. It is not modal: the controls
+    // beside the case stay usable, so it must not claim aria-modal.
     await expect(page.getByRole("dialog", { name: "Navigation" })).toBeFocused();
+    await expect(page.getByRole("dialog", { name: "Navigation" })).not.toHaveAttribute(
+      "aria-modal",
+      "true",
+    );
 
     await page.getByRole("button", { name: "Push the background" }).focus();
     await page.keyboard.press("Enter");
@@ -178,12 +183,34 @@ test.describe("prefers-reduced-motion", () => {
   test("the restore is still visibly a journey, in steps", async ({ page }) => {
     await page.goto("/exhibits/drawer-scroll-lock#first-fix");
     await page.getByRole("button", { name: "Scroll to the middle" }).click();
+    const viewport = page.locator("[class*=viewport]").first();
+    const y = await viewport.evaluate((el) => Math.round(el.scrollTop));
     await page.getByRole("button", { name: "Open the drawer" }).click();
-    await page.getByRole("button", { name: "Close the drawer" }).click();
 
+    /* Sample every frame. "Still travelling" alone would pass for a smooth
+       glide too, which is exactly what reduced motion asked not to see. */
+    await viewport.evaluate((el) => {
+      const seen: number[] = [];
+      (window as unknown as { __restore: number[] }).__restore = seen;
+      const started = performance.now();
+      const tick = () => {
+        seen.push(Math.round(el.scrollTop));
+        if (performance.now() - started < 1600) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.getByRole("button", { name: "Close the drawer" }).click();
     await expect(page.getByTestId("frame-verdict")).toContainText(
       "still travelling",
     );
+    await page.waitForTimeout(1800);
+
+    const positions = await page.evaluate(() => [
+      ...new Set((window as unknown as { __restore: number[] }).__restore),
+    ]);
+    expect(positions.at(-1)).toBe(y);
+    expect(positions.length, positions.join(" → ")).toBeGreaterThanOrEqual(3);
+    expect(positions.length, positions.join(" → ")).toBeLessThanOrEqual(6);
   });
 
   test("decorative transitions are switched off", async ({ page }) => {

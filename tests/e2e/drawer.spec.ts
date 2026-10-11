@@ -114,7 +114,7 @@ test("every way of closing lands on the same pixel when fixed", async ({ page })
     if (close === "scrim") {
       /* The drawer covers the left 76% of the screen, so the only part of
          the scrim you can actually hit is on the right. */
-      const box = await page.locator("#drawer-sim-scrim").boundingBox();
+      const box = await page.getByTestId("drawer-scrim").boundingBox();
       await page.mouse.click(
         (box?.x ?? 0) + (box?.width ?? 0) - 12,
         (box?.y ?? 0) + 140,
@@ -135,7 +135,7 @@ test("Escape closes the drawer and gives focus back to the hamburger", async ({
 }) => {
   await selectState(page, /^Fixed$/);
   await scrollToMiddle(page);
-  await openDrawer(page);
+  await page.getByTestId("phone-burger").click();
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open the drawer" })).toBeVisible();
@@ -169,7 +169,7 @@ test("wheeling over the scrim cannot move a locked page", async ({ page }) => {
   // While the body is fixed the document's own scroll offset is 0.
   expect(await scrollTop(page)).toBe(0);
 
-  const box = await page.locator("#drawer-sim-scrim").boundingBox();
+  const box = await page.getByTestId("drawer-scrim").boundingBox();
   await page.mouse.move(
     (box?.x ?? 0) + (box?.width ?? 0) - 12,
     (box?.y ?? 0) + 120,
@@ -185,7 +185,7 @@ test("wheeling over the scrim does move an unlocked one", async ({ page }) => {
   const y = await scrollToMiddle(page);
   await openDrawer(page);
 
-  const box = await page.locator("#drawer-sim-scrim").boundingBox();
+  const box = await page.getByTestId("drawer-scrim").boundingBox();
   await page.mouse.move(
     (box?.x ?? 0) + (box?.width ?? 0) - 12,
     (box?.y ?? 0) + 120,
@@ -209,4 +209,75 @@ test("the phone scrolls with a real wheel, not just the buttons", async ({ page 
   await expect
     .poll(async () => scrollTop(page), { timeout: 2000 })
     .toBeGreaterThan(50);
+});
+
+test("Broken: pushing from the very bottom still shows the page moving", async ({
+  page,
+}) => {
+  await viewport(page).evaluate((el) => {
+    el.style.scrollBehavior = "auto";
+    el.scrollTop = el.scrollHeight;
+    el.style.scrollBehavior = "";
+  });
+  const bottom = await scrollTop(page);
+  await openDrawer(page);
+
+  await page.getByRole("button", { name: "Push the background" }).click();
+
+  await expect(log(page).getByText(/scrollTop moved/)).toBeVisible();
+  await expect(log(page).getByText(/the page is locked/)).toHaveCount(0);
+  expect(await scrollTop(page)).toBeLessThan(bottom);
+});
+
+test("a locked page says so when asked to jump to the middle", async ({ page }) => {
+  await selectState(page, /First fix/);
+  await scrollToMiddle(page);
+  await openDrawer(page);
+
+  await page.getByRole("button", { name: "Scroll to the middle" }).click();
+
+  await expect(log(page).getByText(/jumped to the middle/)).toHaveCount(1);
+  await expect(log(page).getByText(/the page is locked/)).toBeVisible();
+});
+
+test("every way out gives focus back to the control that opened the drawer", async ({
+  page,
+}) => {
+  await selectState(page, /^Fixed$/);
+  const side = page.getByRole("button", { name: "Open the drawer" });
+  const burger = page.getByTestId("phone-burger");
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+
+  // Opened beside the case, closed with Escape from inside the drawer.
+  await side.focus();
+  await page.keyboard.press("Enter");
+  await expect(drawer).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(side).toBeFocused();
+
+  // Opened from the hamburger, closed with the drawer's own button.
+  await burger.focus();
+  await page.keyboard.press("Enter");
+  await drawer.getByRole("button", { name: "Close (Esc)" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(burger).toBeFocused();
+
+  // Opened beside the case, closed on the scrim.
+  await side.focus();
+  await page.keyboard.press("Enter");
+  const box = await page.getByTestId("drawer-scrim").boundingBox();
+  await page.mouse.click((box?.x ?? 0) + (box?.width ?? 0) - 12, (box?.y ?? 0) + 140);
+  await expect(side).toBeFocused();
+});
+
+test("following a link in the drawer puts focus at the top of the new page", async ({
+  page,
+}) => {
+  await selectState(page, /^Fixed$/);
+  await page.getByRole("button", { name: "Open the drawer" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Graphs" }).focus();
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByTestId("phone-burger")).toBeFocused();
 });
