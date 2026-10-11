@@ -27,7 +27,10 @@ describe("the gallery as data", () => {
 
   it("registers a component for every simulation id in use", () => {
     for (const exhibit of exhibits) {
-      expect(SIM_REGISTRY[exhibit.simulation]).toBeTypeOf("function");
+      const component = SIM_REGISTRY[exhibit.simulation];
+      expect(component, exhibit.simulation).toBeTruthy();
+      /* next/dynamic hands back a lazy component, which is an object. */
+      expect(["function", "object"]).toContain(typeof component);
     }
   });
 
